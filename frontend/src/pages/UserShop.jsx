@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from "react";
-import Sidebar from "../components/Sidebar";
-import Header from "../components/Header";
+import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 
 const UserShop = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const { cart, addToCart, removeFromCart, updateQuantity, totalAmount, checkout } = useCart();
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
-
-  const { cart, addToCart, removeFromCart, updateQuantity, totalAmount, checkout } = useCart();
 
   // Order Placement & Polling State
   const [note, setNote] = useState("");
@@ -62,7 +64,6 @@ const UserShop = () => {
             setPollOrderId(null);
             setShowResultModal(true);
           } else if (status === "CANCELLED") {
-            // Get error message if cancelled
             clearInterval(intervalId);
             setPlacingOrder(false);
             setPollOrderId(null);
@@ -103,52 +104,144 @@ const UserShop = () => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  const categories = [
+    { key: "", label: "Tất cả" },
+    { key: "Bakery", label: "Bánh mì" },
+    { key: "Beverage", label: "Đồ uống" },
+    { key: "Snack", label: "Đồ ăn vặt" },
+    { key: "Instant Food", label: "Ăn liền" },
+    { key: "Dairy", label: "Sữa tươi" },
+    { key: "Combo", label: "Combo" }
+  ];
+
   return (
-    <div className="bg-[#f9f9ff] text-[#151c27] min-h-screen relative font-body">
+    <div className="bg-[#f9f9ff] text-[#151c27] min-h-screen relative font-body flex flex-col">
       
-      {/* SideNavbar */}
-      <Sidebar />
+      {/* TopNavBar Component - Match user-page.html layout */}
+      <nav className="sticky top-0 z-50 flex flex-col w-full bg-white px-4 md:px-8 py-2 border-b border-outline-variant shadow-sm">
+        <div className="flex items-center justify-between w-full max-w-[1440px] mx-auto h-16">
+          {/* Brand Logo */}
+          <div className="flex items-center gap-4">
+            <span 
+              onClick={() => { setCategoryFilter(""); setSearchQuery(""); }}
+              className="text-2xl font-black text-primary tracking-tight cursor-pointer"
+            >
+              7-Eleven Vietnam
+            </span>
+          </div>
 
-      {/* TopNavbar with Search */}
-      <Header 
-        title="7-Eleven Việt Nam - Đặt hàng POS" 
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        placeholder="Tìm món ăn, đồ uống..."
-      />
+          {/* Navigation Links (Desktop) - Connects directly to Categories filter! */}
+          <div className="hidden md:flex items-center gap-6">
+            {categories.map((cat) => (
+              <button
+                key={cat.key}
+                onClick={() => setCategoryFilter(cat.key)}
+                className={`text-sm font-semibold transition-all pb-1 ${
+                  categoryFilter === cat.key
+                    ? "text-primary border-b-2 border-primary font-bold"
+                    : "text-on-surface-variant hover:text-primary"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
 
-      {/* Main Grid: Products on Left, Shopping Cart on Right */}
-      <main className="md:ml-[260px] pt-20 p-6 md:p-8 min-h-screen bg-slate-50 flex gap-6">
+          {/* Trailing Actions */}
+          <div className="flex items-center gap-4 text-primary font-bold">
+            {/* Show Cart items badge indicator */}
+            <div className="p-2 hover:bg-slate-100 rounded-full transition-colors relative cursor-pointer">
+              <span className="material-symbols-outlined text-[24px]">shopping_cart</span>
+              {cart.length > 0 && (
+                <span className="absolute top-1 right-1 w-4 h-4 bg-error text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-bounce">
+                  {cart.reduce((sum, item) => sum + item.quantity, 0)}
+                </span>
+              )}
+            </div>
+
+            {/* Location indicator */}
+            <div className="p-2 hover:bg-slate-100 rounded-full transition-colors hidden sm:block cursor-pointer" title="Hồ Chí Minh, VN">
+              <span className="material-symbols-outlined text-[24px]">location_on</span>
+            </div>
+
+            {/* Conditional Authentication Widget - Login is Optional */}
+            {user ? (
+              <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
+                <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs uppercase shadow-sm">
+                  {user.fullName?.charAt(0).toUpperCase() || "U"}
+                </div>
+                <div className="hidden lg:block text-left mr-1">
+                  <div className="text-xs font-bold text-on-surface leading-tight truncate max-w-[80px]">
+                    {user.fullName}
+                  </div>
+                  <div className="text-[9px] font-semibold text-on-surface-variant uppercase tracking-wider leading-none">
+                    {user.role}
+                  </div>
+                </div>
+                <button 
+                  onClick={handleLogout}
+                  className="p-1.5 rounded-full hover:bg-red-50 text-red-500 transition-colors"
+                  title="Đăng xuất"
+                >
+                  <span className="material-symbols-outlined text-[20px]">logout</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => navigate("/login")}
+                className="h-9 px-4 rounded-full border border-primary text-primary hover:bg-primary/5 transition-all text-xs font-bold flex items-center gap-1.5 shadow-sm"
+              >
+                <span className="material-symbols-outlined text-sm">person</span>
+                Đăng nhập
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Secondary row for Search Bar */}
+        <div className="w-full max-w-[1440px] mx-auto py-2 flex justify-start">
+          <div className="relative w-full max-w-md">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">
+              search
+            </span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-slate-100 border border-outline-variant rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+              placeholder="Tìm kiếm món ăn, đồ uống tại cửa hàng 7-11..."
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary"
+              >
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Grid: Products on Left, Shopping Cart on Right (No Sidebar margin, Center Aligned!) */}
+      <main className="w-full max-w-[1440px] mx-auto px-4 md:px-8 py-6 flex gap-6 flex-col lg:flex-row bg-slate-50 flex-grow min-h-[calc(100vh-200px)]">
         
         {/* Left Side: Product Selection */}
-        <div className="flex-1 space-y-6 max-w-[calc(100%-380px)]">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 className="text-2xl font-extrabold text-primary mb-1">
-                Thực đơn Cửa hàng
-              </h1>
-              <p className="text-sm text-on-surface-variant">
-                Lựa chọn sản phẩm tươi ngon của 7-Eleven và thêm vào giỏ hàng
-              </p>
-            </div>
-            
-            {/* Quick Category Filters */}
-            <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
-              {["", "Bakery", "Beverage", "Snack", "Instant Food", "Dairy", "Combo"].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setCategoryFilter(cat)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border whitespace-nowrap ${
-                    categoryFilter === cat
-                      ? "bg-primary text-on-primary border-primary shadow-sm"
-                      : "bg-white text-on-surface-variant border-outline-variant hover:bg-slate-50"
-                  }`}
-                >
-                  {cat === "" ? "Tất cả" : cat}
-                </button>
-              ))}
-            </div>
+        <div className="flex-1 space-y-6">
+          {/* Heading */}
+          <div>
+            <h1 className="text-xl md:text-2xl font-black text-primary flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-2xl">restaurant_menu</span>
+              Thực đơn Cửa hàng
+            </h1>
+            <p className="text-xs text-on-surface-variant mt-1">
+              Thưởng thức món ăn tươi ngon chuẩn vị 7-Eleven. Đặt hàng POS nhanh không cần tài khoản!
+            </p>
           </div>
 
           {/* Product Grid */}
@@ -205,7 +298,7 @@ const UserShop = () => {
                       ) : (
                         <button
                           onClick={() => addToCart(prod)}
-                          className="px-4 py-1.5 rounded-lg bg-primary text-on-primary font-bold text-xs hover:bg-primary-container transition-colors shadow-sm flex items-center gap-1"
+                          className="px-4 py-1.5 rounded-lg bg-primary text-on-primary font-bold text-xs hover:bg-primary-container transition-colors shadow-sm flex items-center gap-1 cursor-pointer"
                         >
                           <span className="material-symbols-outlined text-sm">add_shopping_cart</span>
                           Thêm giỏ
@@ -219,8 +312,8 @@ const UserShop = () => {
           )}
         </div>
 
-        {/* Right Side: Persistent Shopping Cart (Floating Panel) */}
-        <aside className="w-[360px] bg-white rounded-2xl border border-outline-variant/30 flex flex-col h-[calc(100vh-120px)] shadow-sm fixed right-8 top-20 z-30">
+        {/* Right Side: Shopping Cart (Sticky Flex Column) */}
+        <aside className="w-full lg:w-[380px] bg-white rounded-2xl border border-outline-variant/30 flex flex-col h-[calc(100vh-160px)] lg:sticky lg:top-24 shadow-sm z-30">
           
           {/* Cart Header */}
           <div className="p-4 border-b border-outline-variant/20 flex items-center justify-between bg-slate-50 rounded-t-2xl">
@@ -310,7 +403,7 @@ const UserShop = () => {
 
             {/* Total calculation */}
             <div className="flex justify-between items-center">
-              <span className="text-xs font-bold text-on-surface-variant">Tổng tiền toán:</span>
+              <span className="text-xs font-bold text-on-surface-variant">Tổng thanh toán:</span>
               <span className="text-lg font-black text-primary">
                 {totalAmount.toLocaleString("vi-VN")}₫
               </span>
@@ -320,12 +413,12 @@ const UserShop = () => {
             <button
               onClick={handlePlaceOrder}
               disabled={cart.length === 0 || placingOrder}
-              className="w-full py-3 rounded-xl bg-primary text-on-primary font-bold text-sm hover:bg-primary-container transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-xl bg-primary text-on-primary font-bold text-sm hover:bg-primary-container transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
             >
               {placingOrder ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                  <span>Đang xử lý đơn kho...</span>
+                  <span>Đang xử lý tồn kho...</span>
                 </>
               ) : (
                 <>
@@ -369,7 +462,7 @@ const UserShop = () => {
                   setShowResultModal(false);
                   setPollError("");
                 }}
-                className="mt-6 w-full py-2.5 rounded-lg bg-primary text-on-primary font-bold text-sm hover:bg-primary-container transition-all"
+                className="mt-6 w-full py-2.5 rounded-lg bg-primary text-on-primary font-bold text-sm hover:bg-primary-container transition-all cursor-pointer"
               >
                 Đồng ý
               </button>
@@ -377,6 +470,35 @@ const UserShop = () => {
           </div>
         )}
       </main>
+
+      {/* Footer Component - Match user-page.html */}
+      <footer className="w-full py-8 px-4 md:px-8 grid grid-cols-1 md:grid-cols-4 gap-6 bg-white border-t mt-auto text-on-surface-variant text-xs">
+        <div className="flex flex-col gap-4">
+          <span className="text-sm font-bold text-primary">7-Eleven Việt Nam</span>
+          <p>© 2026 7-Eleven Vietnam. Tất cả các quyền được bảo lưu.</p>
+        </div>
+        <div className="flex flex-col gap-2 font-medium">
+          <a className="hover:text-primary hover:underline transition-all" href="#">Về chúng tôi</a>
+          <a className="hover:text-primary hover:underline transition-all" href="#">Tìm cửa hàng</a>
+          <a className="hover:text-primary hover:underline transition-all" href="#">Tuyển dụng</a>
+        </div>
+        <div className="flex flex-col gap-2 font-medium">
+          <a className="hover:text-primary hover:underline transition-all" href="#">Điều khoản dịch vụ</a>
+          <a className="hover:text-primary hover:underline transition-all" href="#">Chính sách bảo mật</a>
+          <a className="hover:text-primary hover:underline transition-all" href="#">Hỗ trợ khách hàng</a>
+        </div>
+        <div className="flex flex-col gap-3">
+          <span className="font-bold text-on-surface">Kết nối với chúng tôi</span>
+          <div className="flex gap-2">
+            <button className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors">
+              <span className="material-symbols-outlined text-sm text-on-surface-variant">share</span>
+            </button>
+            <button className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors">
+              <span className="material-symbols-outlined text-sm text-on-surface-variant">mail</span>
+            </button>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

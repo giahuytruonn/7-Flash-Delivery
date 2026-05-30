@@ -45,7 +45,7 @@ const RootRedirect = () => {
   if (loading) return null;
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/shop" replace />;
   }
 
   return user.role === "ADMIN" ? (
@@ -84,14 +84,7 @@ function App() {
             />
 
             {/* User Shop Routes */}
-            <Route
-              path="/shop"
-              element={
-                <ProtectedRoute allowedRoles={["USER"]}>
-                  <UserShop />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/shop" element={<UserShop />} />
 
             {/* Root Redirection */}
             <Route path="/" element={<RootRedirect />} />

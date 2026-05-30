@@ -41,8 +41,14 @@ public class OrderService {
     @Transactional
     public OrderStatusResponse createOrder(CreateOrderRequest request) {
         // 1. Extract userId from SecurityContext
-        String principal = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        UUID userId = UUID.fromString(principal);
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UUID userId;
+        try {
+            userId = UUID.fromString(String.valueOf(principal));
+        } catch (Exception e) {
+            // Fallback to guest UUID if not logged in
+            userId = UUID.fromString("00000000-0000-0000-0000-000000000000");
+        }
         
         log.info("Bắt đầu khởi tạo đơn hàng mới cho người dùng: {}", userId);
 
@@ -129,16 +135,24 @@ public class OrderService {
     }
 
     public OrderStatusResponse getOrderStatus(UUID id) {
-        String principal = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        UUID userId = UUID.fromString(principal);
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UUID userId = null;
+        try {
+            userId = UUID.fromString(String.valueOf(principal));
+        } catch (Exception e) {
+            // Anonymous guest user
+        }
 
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng với ID: " + id));
 
-        // Security check: only own orders can be viewed by USER
-        if (!order.getUserId().equals(userId)) {
-            log.warn("Cảnh báo bảo mật: Người dùng ID: {} cố gắng truy cập trạng thái đơn hàng ID: {} thuộc về người dùng khác", userId, id);
-            throw new AccessDeniedException("Bạn không có quyền truy cập thông tin đơn hàng này");
+        // If the order belongs to a registered user, check ownership
+        UUID guestUuid = UUID.fromString("00000000-0000-0000-0000-000000000000");
+        if (!order.getUserId().equals(guestUuid)) {
+            if (userId == null || !order.getUserId().equals(userId)) {
+                log.warn("Cảnh báo bảo mật: Người dùng ID: {} cố gắng truy cập trạng thái đơn hàng ID: {} thuộc về người dùng khác", userId, id);
+                throw new AccessDeniedException("Bạn không có quyền truy cập thông tin đơn hàng này");
+            }
         }
 
         return OrderStatusResponse.builder()

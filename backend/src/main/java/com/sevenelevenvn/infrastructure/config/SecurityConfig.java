@@ -49,10 +49,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/products/*").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/products/*").hasRole("ADMIN")
                 
-                // Order operations for USER role
-                .requestMatchers(HttpMethod.POST, "/api/orders").hasRole("USER")
+                // Order operations (login optional for placing orders)
+                .requestMatchers(HttpMethod.POST, "/api/orders").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/orders/*/status").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/orders/my").hasRole("USER")
-                .requestMatchers(HttpMethod.GET, "/api/orders/*/status").hasRole("USER")
                 
                 // Order management for ADMIN role
                 .requestMatchers(HttpMethod.GET, "/api/orders").hasRole("ADMIN")
