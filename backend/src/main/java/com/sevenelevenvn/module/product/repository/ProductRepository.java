@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,6 +17,10 @@ import java.util.UUID;
 public interface ProductRepository extends JpaRepository<Product, UUID> {
     
     Optional<Product> findBySku(String sku);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Product p WHERE p.id = :id AND p.isActive = true")
+    Optional<Product> findByIdWithPessimisticWriteLock(@Param("id") UUID id);
 
     @Query("SELECT p FROM Product p WHERE p.isActive = true " +
            "AND (:category IS NULL OR :category = '' OR LOWER(p.category) = LOWER(:category)) " +
