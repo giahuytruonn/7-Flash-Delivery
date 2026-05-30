@@ -39,6 +39,26 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
+// Admin Route Guard Component (Blocks CUSTOMER role, allows guest demo or admin)
+const AdminRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // If logged in as CUSTOMER, strictly redirect to shop storefront
+  if (user && user.role === "CUSTOMER") {
+    return <Navigate to="/shop" replace />;
+  }
+
+  return children;
+};
+
 // Root Redirect component
 const RootRedirect = () => {
   const { user, loading } = useAuth();
@@ -66,9 +86,23 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            {/* Admin Routes (Public for Demo) */}
-            <Route path="/admin/products" element={<ProductManagement />} />
-            <Route path="/admin/orders" element={<OrderManagement />} />
+            {/* Admin Routes (Public for Demo, but strictly blocked for logged-in Customers) */}
+            <Route 
+              path="/admin/products" 
+              element={
+                <AdminRoute>
+                  <ProductManagement />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/orders" 
+              element={
+                <AdminRoute>
+                  <OrderManagement />
+                </AdminRoute>
+              } 
+            />
 
             {/* User Shop Routes */}
             <Route path="/shop" element={<UserShop />} />
