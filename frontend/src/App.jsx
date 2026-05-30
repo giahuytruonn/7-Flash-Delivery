@@ -66,23 +66,9 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            {/* Admin Routes */}
-            <Route
-              path="/admin/products"
-              element={
-                <ProtectedRoute allowedRoles={["ADMIN"]}>
-                  <ProductManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/orders"
-              element={
-                <ProtectedRoute allowedRoles={["ADMIN"]}>
-                  <OrderManagement />
-                </ProtectedRoute>
-              }
-            />
+            {/* Admin Routes (Public for Demo) */}
+            <Route path="/admin/products" element={<ProductManagement />} />
+            <Route path="/admin/orders" element={<OrderManagement />} />
 
             {/* User Shop Routes */}
             <Route path="/shop" element={<UserShop />} />

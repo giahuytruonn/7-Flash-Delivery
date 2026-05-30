@@ -44,19 +44,19 @@ public class SecurityConfig {
                 // Swagger OpenAPI endpoints
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 
-                // Product management is ADMIN only
-                .requestMatchers(HttpMethod.POST, "/api/products").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/products/*").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/products/*").hasRole("ADMIN")
+                // Product management (Public for Demo)
+                .requestMatchers(HttpMethod.POST, "/api/products", "/api/products/**").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/api/products/*").permitAll()
+                .requestMatchers(HttpMethod.DELETE, "/api/products/*").permitAll()
                 
-                // Order operations (login optional for placing orders)
+                // Order operations (Public for Demo)
                 .requestMatchers(HttpMethod.POST, "/api/orders").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/orders/*/status").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/orders/my").hasRole("USER")
+                .requestMatchers(HttpMethod.GET, "/api/orders/my").permitAll()
                 
-                // Order management for ADMIN role
-                .requestMatchers(HttpMethod.GET, "/api/orders").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/orders/*").hasRole("ADMIN")
+                // Order management (Public for Demo)
+                .requestMatchers(HttpMethod.GET, "/api/orders").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/orders/*").permitAll()
                 
                 // Any other request must be authenticated
                 .anyRequest().authenticated()

@@ -127,8 +127,13 @@ public class OrderService {
     }
 
     public List<OrderResponse> findMyOrders() {
-        String principal = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        UUID userId = UUID.fromString(principal);
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UUID userId;
+        try {
+            userId = UUID.fromString(String.valueOf(principal));
+        } catch (Exception e) {
+            userId = UUID.fromString("00000000-0000-0000-0000-000000000000");
+        }
         
         List<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
         return orders.stream().map(this::toResponse).collect(Collectors.toList());
