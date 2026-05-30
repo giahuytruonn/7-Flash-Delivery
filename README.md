@@ -5,6 +5,16 @@
 > * **🚀 Live Production Storefront:** [https://7-flash-delivery.vercel.app/shop](https://7-flash-delivery.vercel.app/shop)
 > * **🔌 Live Backend API Production:** [https://seven-flash-delivery.onrender.com](https://seven-flash-delivery.onrender.com)
 > * **📖 Interactive API Docs (Swagger):** [https://seven-flash-delivery.onrender.com/swagger-ui/index.html](https://seven-flash-delivery.onrender.com/swagger-ui/index.html)
+>
+> ---
+>
+> ### 💡 Quick Testing & Experience Guide (For Reviewers / Recruiters)
+> You can experience all premium features of the system instantly without any friction:
+> 1. **No Registration Required (Simulated Guest/Admin - Recruiter Mode):** 
+>    * You can navigate directly to the [Product Management](https://7-flash-delivery.vercel.app/admin/products) or [Order Management](https://7-flash-delivery.vercel.app/admin/orders) dashboards. The system will automatically authenticate a simulated Admin account, allowing you to test all CRUD capabilities, view inventory analytics, securely upload images to Cloudinary, and update order statuses.
+>    * On the shopping storefront, you can freely browse products, add items to the cart, and proceed to checkout as a guest customer (login is not mandatory).
+> 2. **Flexible New Account Registration:**
+>    * You can register a new account on the Sign Up page and select either the **Khách hàng (USER)** or **Quản trị viên (ADMIN)** role to inspect the system's strict role-based security filters and access controls.
 
 Welcome to **7-Flash Delivery (Retail OS)** — a premium retail management and rapid delivery storefront integrated with an automated payment gateway. This system is designed as a modular monolith following **Domain-Driven Design (DDD)** and **Clean Architecture** principles to showcase high-concurrency backend stability, event-driven communications, and sleek responsive frontend user experiences.
 
