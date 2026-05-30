@@ -153,6 +153,15 @@ const UserShop = () => {
             <div className="p-2 hover:bg-slate-100 rounded-full transition-colors hidden sm:block cursor-pointer" title="Hồ Chí Minh, VN">
               <span className="material-symbols-outlined text-[24px]">location_on</span>
             </div>
+            {/* Admin Management Shortcut */}
+            <button
+              onClick={() => navigate("/admin/products")}
+              className="h-9 px-4 rounded-full bg-slate-100 text-on-surface hover:bg-slate-200 transition-all text-xs font-bold flex items-center gap-1.5 shadow-sm border border-outline-variant/20 cursor-pointer"
+              title="Truy cập cổng quản lý Admin"
+            >
+              <span className="material-symbols-outlined text-sm">dashboard</span>
+              Quản lý
+            </button>
 
             {/* User Login/Logout Info */}
             {user ? (
@@ -179,7 +188,7 @@ const UserShop = () => {
             ) : (
               <button
                 onClick={() => navigate("/login")}
-                className="h-9 px-4 rounded-full border border-primary text-primary hover:bg-primary/5 transition-all text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                className="h-9 px-4 rounded-full border border-primary text-primary hover:bg-primary/5 transition-all text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">person</span>
                 Đăng nhập

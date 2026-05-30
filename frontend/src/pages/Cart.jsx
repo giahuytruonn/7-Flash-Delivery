@@ -122,6 +122,16 @@ const Cart = () => {
               )}
             </div>
 
+            {/* Admin Management Shortcut */}
+            <button
+              onClick={() => navigate("/admin/products")}
+              className="h-9 px-4 rounded-full bg-slate-100 text-on-surface hover:bg-slate-200 transition-all text-xs font-bold flex items-center gap-1.5 shadow-sm border border-outline-variant/20 cursor-pointer"
+              title="Truy cập cổng quản lý Admin"
+            >
+              <span className="material-symbols-outlined text-sm">dashboard</span>
+              Quản lý
+            </button>
+
             {user ? (
               <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
                 <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs uppercase shadow-sm">
@@ -146,7 +156,7 @@ const Cart = () => {
             ) : (
               <button
                 onClick={() => navigate("/login")}
-                className="h-9 px-4 rounded-full border border-primary text-primary hover:bg-primary/5 transition-all text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                className="h-9 px-4 rounded-full border border-primary text-primary hover:bg-primary/5 transition-all text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">person</span>
                 Đăng nhập
