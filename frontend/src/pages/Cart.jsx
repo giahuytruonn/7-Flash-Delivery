@@ -139,7 +139,7 @@ const Cart = () => {
               onClick={() => navigate("/shop")}
               className="text-2xl font-black text-primary tracking-tight cursor-pointer"
             >
-              7-Eleven Vietnam
+              7-Flash Delivery
             </span>
           </div>
 
@@ -514,7 +514,7 @@ const Cart = () => {
               
               {/* Demo Fast Checkout Panel */}
               <div className="w-full border-t border-dashed border-slate-200 pt-4 space-y-3 text-center">
-                <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Khử tác vụ test nhanh (Recruiter Mode)</div>
+                <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Chế độ kiểm tra nhanh (Dành cho nhà tuyển dụng)</div>
                 <button
                   onClick={handleConfirmDemoSuccess}
                   className="w-full py-3 rounded-xl bg-[#F58220] hover:bg-[#E07116] text-white font-extrabold text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"

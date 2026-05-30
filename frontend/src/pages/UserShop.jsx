@@ -100,12 +100,12 @@ const UserShop = () => {
   // 6 Seeded/Interactive Categories mapping with beautiful material icons
   const categoriesList = [
     { key: "", label: "Tất cả", icon: "widgets" },
-    { key: "Bakery", label: "Hot Food", icon: "lunch_dining" },
-    { key: "Beverage", label: "Beverages", icon: "local_cafe" },
-    { key: "Snack", label: "Snacks", icon: "cookie" },
-    { key: "Instant Food", label: "Instant Food", icon: "ramen_dining" },
-    { key: "Dairy", label: "Essentials", icon: "shopping_basket" },
-    { key: "Combo", label: "Combos", icon: "fastfood" }
+    { key: "Bakery", label: "Đồ nóng", icon: "lunch_dining" },
+    { key: "Beverage", label: "Thức uống", icon: "local_cafe" },
+    { key: "Snack", label: "Ăn vặt", icon: "cookie" },
+    { key: "Instant Food", label: "Ăn liền", icon: "ramen_dining" },
+    { key: "Dairy", label: "Thiết yếu", icon: "shopping_basket" },
+    { key: "Combo", label: "Combo", icon: "fastfood" }
   ];
 
   return (
@@ -242,7 +242,7 @@ const UserShop = () => {
         {/* 1. Hero Banner Section */}
         <section className="relative w-full h-[320px] md:h-[420px] rounded-2xl overflow-hidden flex items-center shadow-md">
           <img 
-            alt="Freshness at Your Doorstep - 7-Eleven Vietnam Delivery" 
+            alt="Tươi ngon tận cửa nhà - Giao hàng 7-Eleven Việt Nam" 
             className="absolute inset-0 w-full h-full object-cover z-0" 
             src={screenImg}
             onError={(e) => {
@@ -253,16 +253,16 @@ const UserShop = () => {
           
           <div className="relative z-20 px-6 md:px-12 max-w-xl text-white space-y-4">
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight leading-tight">
-              Freshness at Your Doorstep
+              Tươi ngon tận cửa nhà
             </h1>
             <p className="text-sm md:text-base text-white/90 leading-relaxed font-medium">
-              Order your favorite 7-Eleven treats online and get them delivered in minutes.
+              Đặt món yêu thích từ 7-Eleven trực tuyến và nhận hàng chỉ trong vài phút.
             </p>
             <button 
               onClick={scrollToProducts}
               className="h-11 px-6 rounded-lg bg-primary text-white font-bold text-sm hover:bg-primary-container transition-all shadow-md focus:ring-2 focus:ring-primary cursor-pointer flex items-center justify-center gap-1"
             >
-              Shop Now
+              Mua ngay
               <span className="material-symbols-outlined text-sm">arrow_forward</span>
             </button>
           </div>
@@ -272,7 +272,7 @@ const UserShop = () => {
         <section className="py-2 border-b border-slate-100">
           <h2 className="text-base md:text-lg font-extrabold text-on-surface mb-6 flex items-center gap-1.5">
             <span className="material-symbols-outlined text-primary">category</span>
-            Explore Categories
+            Khám phá danh mục
           </h2>
           
           <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-7 gap-4">

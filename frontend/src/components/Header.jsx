@@ -5,7 +5,7 @@ const Header = ({ title = "7-Flash Delivery", searchQuery, setSearchQuery, place
   const { user } = useAuth();
 
   const mockUser = {
-    fullName: "Khách Demo (Admin)",
+    fullName: "Khách Demo (Quản trị)",
     role: "ADMIN"
   };
   const activeUser = user || mockUser;

@@ -12,7 +12,7 @@ const Sidebar = () => {
   };
 
   const mockUser = {
-    fullName: "Khách Demo (Admin)",
+    fullName: "Khách Demo (Quản trị)",
     role: "ADMIN"
   };
   const activeUser = user || mockUser;
@@ -29,7 +29,7 @@ const Sidebar = () => {
             7-ELEVEN
           </div>
           <div className="text-white/50 text-[11px] font-bold uppercase tracking-wider">
-            Retail OS
+            Hệ thống bán lẻ
           </div>
         </div>
       </div>
@@ -103,7 +103,7 @@ const Sidebar = () => {
               {activeUser.fullName || "User"}
             </div>
             <div className="text-white/40 text-[10px] uppercase font-bold tracking-wider">
-              {activeUser.role}
+              {activeUser.role === "ADMIN" ? "Quản trị viên" : "Khách hàng"}
             </div>
           </div>
         </div>

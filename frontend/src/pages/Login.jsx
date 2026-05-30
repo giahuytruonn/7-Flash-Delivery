@@ -46,7 +46,7 @@ const Login = () => {
             7E
           </div>
           <h2 className="text-center text-3xl font-extrabold tracking-tight text-primary">
-            7-ELEVEN RETAIL
+            7-ELEVEN BÁN LẺ
           </h2>
           <p className="mt-2 text-center text-sm text-on-surface-variant">
             Hệ thống quản lý bán lẻ cửa hàng tiện lợi

@@ -209,9 +209,9 @@ const OrderManagement = () => {
                 className="h-10 px-3 rounded-lg border border-outline-variant bg-white focus:border-primary outline-none text-sm text-on-surface-variant w-full md:w-48"
               >
                 <option value="">Tất cả trạng thái</option>
-                <option value="PENDING">Chờ xử lý (PENDING)</option>
-                <option value="CONFIRMED">Thành công (CONFIRMED)</option>
-                <option value="CANCELLED">Đã hủy (CANCELLED)</option>
+                <option value="PENDING">Chờ xử lý</option>
+                <option value="CONFIRMED">Thành công</option>
+                <option value="CANCELLED">Đã hủy</option>
               </select>
             </div>
             
@@ -273,7 +273,7 @@ const OrderManagement = () => {
                               <td className="p-4 text-xs font-semibold text-on-surface-variant">{formattedTime}</td>
                               <td className="p-4 text-xs font-bold text-on-surface">{itemsCount} món</td>
                               <td className="p-4 text-xs font-medium text-on-surface-variant">
-                                {order.userId ? `User / POS` : `Khách vãng lai`}
+                                {order.userId ? `Thành viên / POS` : `Khách vãng lai`}
                               </td>
                               <td className="p-4 font-bold text-sm text-primary text-right">
                                 {order.totalAmount.toLocaleString("vi-VN")}₫
@@ -321,9 +321,9 @@ const OrderManagement = () => {
                                             onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
                                             className="h-8 px-2 rounded border border-outline-variant bg-white focus:border-primary outline-none text-xs font-bold text-on-surface cursor-pointer"
                                           >
-                                            <option value="PENDING">Chờ xử lý (PENDING)</option>
-                                            <option value="CONFIRMED">Thành công (CONFIRMED)</option>
-                                            <option value="CANCELLED">Đã hủy (CANCELLED)</option>
+                                            <option value="PENDING">Chờ xử lý</option>
+                                            <option value="CONFIRMED">Thành công</option>
+                                            <option value="CANCELLED">Đã hủy</option>
                                           </select>
                                         </div>
 

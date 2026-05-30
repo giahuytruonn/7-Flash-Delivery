@@ -291,12 +291,12 @@ const ProductManagement = () => {
                 className="h-10 px-3 rounded-lg border border-outline-variant bg-white focus:border-primary outline-none text-sm text-on-surface-variant w-full md:w-48"
               >
                 <option value="">Tất cả danh mục</option>
-                <option value="Bakery">Bakery (Bánh mì)</option>
-                <option value="Beverage">Beverage (Đồ uống)</option>
-                <option value="Snack">Snack (Đồ ăn vặt)</option>
-                <option value="Instant Food">Instant Food (Ăn liền)</option>
-                <option value="Dairy">Dairy (Sữa)</option>
-                <option value="Combo">Combo (Bữa ăn)</option>
+                <option value="Bakery">Đồ nóng</option>
+                <option value="Beverage">Thức uống</option>
+                <option value="Snack">Ăn vặt</option>
+                <option value="Instant Food">Ăn liền</option>
+                <option value="Dairy">Thiết yếu</option>
+                <option value="Combo">Combo</option>
               </select>
             </div>
             
@@ -353,7 +353,14 @@ const ProductManagement = () => {
                               </div>
                             </div>
                           </td>
-                          <td className="p-4 text-sm font-medium text-on-surface-variant">{prod.category || "N/A"}</td>
+                          <td className="p-4 text-sm font-medium text-on-surface-variant">
+                            {prod.category === "Bakery" ? "Đồ nóng" :
+                             prod.category === "Beverage" ? "Thức uống" :
+                             prod.category === "Snack" ? "Ăn vặt" :
+                             prod.category === "Instant Food" ? "Ăn liền" :
+                             prod.category === "Dairy" ? "Thiết yếu" :
+                             prod.category === "Combo" ? "Combo" : (prod.category || "N/A")}
+                          </td>
                           <td className="p-4 font-bold text-sm text-primary">{prod.price.toLocaleString("vi-VN")}₫</td>
                           <td className="p-4 font-mono text-sm">
                             {prod.stockQuantity <= 10 ? (
@@ -551,11 +558,11 @@ const ProductManagement = () => {
                   onChange={(e) => setFormCategory(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-white focus:border-primary outline-none text-sm h-[38px]"
                 >
-                  <option value="Bakery">Bakery</option>
-                  <option value="Beverage">Beverage</option>
-                  <option value="Snack">Snack</option>
-                  <option value="Instant Food">Instant Food</option>
-                  <option value="Dairy">Dairy</option>
+                  <option value="Bakery">Đồ nóng</option>
+                  <option value="Beverage">Thức uống</option>
+                  <option value="Snack">Ăn vặt</option>
+                  <option value="Instant Food">Ăn liền</option>
+                  <option value="Dairy">Thiết yếu</option>
                   <option value="Combo">Combo</option>
                 </select>
               </div>
