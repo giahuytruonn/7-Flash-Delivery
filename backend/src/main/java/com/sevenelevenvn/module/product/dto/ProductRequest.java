@@ -35,5 +35,6 @@ public class ProductRequest {
     @Min(value = 0, message = "Số lượng tồn kho không được nhỏ hơn 0")
     private Integer stockQuantity;
 
+    @NotBlank(message = "Hình ảnh sản phẩm không được để trống")
     private String imageUrl;
 }

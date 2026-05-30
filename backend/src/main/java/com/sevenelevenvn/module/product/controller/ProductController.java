@@ -11,6 +11,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import com.sevenelevenvn.module.product.service.ImageUploadService;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.Map;
 import java.util.UUID;
 
@@ -21,6 +25,14 @@ import java.util.UUID;
 public class ProductController {
 
     private final ProductService productService;
+    private final ImageUploadService imageUploadService;
+
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Tải ảnh sản phẩm lên Cloudinary (ADMIN)", description = "Yêu cầu quyền ADMIN, nhận file ảnh và tải lên đám mây")
+    public ApiResponse<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file) throws Exception {
+        String imageUrl = imageUploadService.uploadImage(file);
+        return ApiResponse.success("Tải ảnh lên thành công", Map.of("imageUrl", imageUrl));
+    }
 
     @GetMapping
     @Operation(summary = "Xem danh sách sản phẩm", description = "Tìm kiếm và lọc sản phẩm có hỗ trợ phân trang và lưu cache Redis")

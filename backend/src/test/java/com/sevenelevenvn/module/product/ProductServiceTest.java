@@ -84,6 +84,7 @@ public class ProductServiceTest {
                 .sku("CF-002")
                 .price(BigDecimal.valueOf(25000))
                 .stockQuantity(10)
+                .imageUrl("https://images.unsplash.com/photo-1517701604599-bb29b565090c")
                 .build();
     }
 
@@ -162,6 +163,7 @@ public class ProductServiceTest {
                 .sku("CF-002")
                 .price(BigDecimal.valueOf(28000))
                 .stockQuantity(15)
+                .imageUrl("https://images.unsplash.com/photo-1517701604599-bb29b565090c")
                 .build();
 
         Product updatedProduct = Product.builder()
