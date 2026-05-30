@@ -1,184 +1,165 @@
-# ⚡ 7-Eleven Flash Delivery - Retail OS
+# ⚡ 7-Flash Delivery - Retail OS
 
-Chào mừng bạn đến với **7-Eleven Flash Delivery (Retail OS)** — Hệ thống quản trị bán lẻ và giao hàng chớp nhoáng tích hợp cổng thanh toán trực tuyến. Dự án được thiết kế chuyên biệt để trình diễn khả năng giải quyết các bài toán kỹ thuật phức tạp từ backend tối ưu hiệu năng cao cho đến giao diện frontend hiện đại, mượt mà và trực quan.
+Welcome to **7-Flash Delivery (Retail OS)** — a premium retail management and rapid delivery storefront integrated with an automated payment gateway. This system is designed as a modular monolith following **Domain-Driven Design (DDD)** and **Clean Architecture** principles to showcase high-concurrency backend stability, event-driven communications, and sleek responsive frontend user experiences.
 
 ---
 
-## 🏛️ Kiến trúc Hệ thống & Sơ đồ Hoạt động
+## 🏛️ System Architecture & Sequence Flow
 
-Hệ thống được thiết kế theo mô hình **Modular Monolith** kết hợp nguyên lý phát triển **DDD (Domain-Driven Design)** và **Clean Architecture**. Cơ sở dữ liệu sử dụng kiến trúc phân tách schema độc lập nhằm tạo tiền đề chuyển đổi sang Microservices khi quy mô mở rộng.
+The project separates logic into clean, domain-focused modules (`user`, `product`, `order`). To facilitate future microservices migration, the PostgreSQL database is separated into three isolated schemas:
+* `user_schema`: Handles authentication, user profiles, and JWT security.
+* `product_schema`: Manages inventory levels (POS Stock), catalogs, and caching.
+* `order_schema`: Manages order lifecycles and transactions.
 
-### 1. Phân Tách Database Schema độc lập
-Nhằm tối ưu hóa quản lý dữ liệu, dự án phân chia cơ sở dữ liệu shared-PostgreSQL thành các schema tách biệt rõ rệt về mặt nghiệp vụ:
-* `user_schema`: Quản lý thực thể tài khoản khách hàng, quản trị viên và phân quyền JWT.
-* `product_schema`: Chứa thông tin danh mục, sản phẩm, giá bán và số lượng tồn kho (POS Stock).
-* `order_schema`: Quản lý thông tin đơn hàng chi tiết và lịch sử giao dịch.
+### Asynchronous Order Placement & Payment Flow
+This sequence diagram illustrates the decoupled stock reservation, Redis mapping, and real-time PayOS status polling:
 
-### 2. Sơ đồ Luồng Nghiệp vụ (đặt hàng bất đồng bộ & thanh toán)
 ```mermaid
+%%{init: { 'theme': 'dark', 'themeVariables': { 'actorBorder': '#10b981', 'actorBkg': '#0D1F17', 'actorTextColor': '#ffffff', 'rectBorderColor': '#F58220', 'rectBkgColor': '#1e293b', 'lineColor': '#10b981', 'signalColor': '#F58220', 'signalTextColor': '#ffffff', 'labelBoxBorderColor': '#10b981', 'labelBoxBkgColor': '#0D1F17', 'labelTextColor': '#ffffff' } } }%%
 sequenceDiagram
     autonumber
-    actor User as Khách hàng
+    actor User as Customer
     participant FE as React Frontend
     participant BE as Spring Boot Backend
     participant Redis as Redis Cache
     participant DB as PostgreSQL DB
-    participant PayOS as Cổng PayOS
+    participant PayOS as PayOS Gateway
 
-    User->>FE: Bấm "Xác nhận Đặt hàng"
-FE->>BE: POST /api/orders (Tạo đơn hàng)
-    Note over BE: Khởi tạo đơn PENDING
-    BE->>DB: Lưu đơn hàng PENDING vào database
-    BE-->>FE: Trả về orderId (UUID)
+    User->>FE: Click "Xác nhận Đặt hàng" (Place Order)
+    FE->>BE: POST /api/orders (Create Order)
+    Note over BE: Initialize order as PENDING
+    BE->>DB: Save PENDING order to Database
+    BE-->>FE: Return orderId (UUID)
     
-    rect rgb(240, 248, 255)
-        Note over BE, DB: XỬ LÝ TRỪ KHO BẤT ĐỒNG BỘ
-        BE->>BE: Phát hành sự kiện InventoryDeductEvent
-        BE->>DB: findByIdWithPessimisticWriteLock (Khóa ghi dòng sản phẩm)
-        alt Kho đủ hàng
-            BE->>DB: Trừ tồn kho & Evict cache Redis
-        else Kho hết hàng
-            BE->>DB: Đổi đơn hàng sang CANCELLED
+    rect rgb(30, 41, 59)
+        Note over BE, DB: ASYNCHRONOUS INVENTORY CHECK
+        BE->>BE: Publish InventoryDeductEvent (Async)
+        BE->>DB: findByIdWithPessimisticWriteLock (Lock row)
+        alt Stock Available
+            BE->>DB: Deduct stock & Evict Redis Cache
+        else Out of Stock
+            BE->>DB: Update order status to CANCELLED
         end
     end
 
-    FE->>BE: POST /api/payments/create/{orderId} (Yêu cầu cổng thanh toán)
-    BE->>Redis: Lưu ánh xạ song hướng: uuid <-> orderCode (long)
-    BE->>PayOS: Gọi API tạo liên kết thanh toán (Checkout Link)
-    PayOS-->>BE: Trả về checkoutUrl
-    BE-->>FE: Trả về URL thanh toán & Render Iframe QR Code
+    FE->>BE: POST /api/payments/create/{orderId}
+    BE->>Redis: Save bi-directional mapping (UUID <-> orderCode)
+    BE->>PayOS: Request Checkout Link (payOS.create)
+    PayOS-->>BE: Return checkoutUrl
+    BE-->>FE: Return URL & Render Embedded QR Iframe
 
-    rect rgb(255, 245, 230)
-        Note over FE, BE: LUỒNG POLLING KIỂM TRA TRẠNG THÁI
-        FE->>BE: GET /api/orders/{orderId}/status (1.5s/lần)
-        BE->>Redis: Tra cứu orderCode từ UUID đơn hàng
-        BE->>PayOS: GET thông tin liên kết thanh toán (SDK get)
-        PayOS-->>BE: Trả về Trạng thái (PAID/PENDING/CANCELLED)
-        alt Đã thanh toán (PAID)
-            BE->>DB: Cập nhật đơn sang CONFIRMED
-            BE->>BE: Phát hành sự kiện OrderConfirmedEvent (Đồng bộ RabbitMQ)
-        else Hủy thanh toán (CANCELLED)
-            BE->>DB: Hoàn trả tồn kho (Compensation) & Đổi sang CANCELLED
+    rect rgb(30, 41, 59)
+        Note over FE, BE: STATE POLLING LOOP
+        FE->>BE: GET /api/orders/{orderId}/status (Every 1.5s)
+        BE->>Redis: Retrieve orderCode from UUID
+        BE->>PayOS: Query Payment Details (payOS.get)
+        PayOS-->>BE: Return status (PAID / CANCELLED / PENDING)
+        alt Status is PAID
+            BE->>DB: Update order status to CONFIRMED
+            BE->>BE: Publish OrderConfirmedEvent (RabbitMQ Bridge)
+        else Status is CANCELLED
+            BE->>DB: Trigger InventoryRestoreEvent (Compensation) & Cancel Order
         end
-        BE-->>FE: Trả về trạng thái đơn hàng hiện tại
+        BE-->>FE: Return current order status
     end
 
-    alt Trạng thái thành CONFIRMED
-        FE-->>User: Đóng modal, Xóa giỏ hàng & Báo thành công!
+    alt Status transitions to CONFIRMED
+        FE-->>User: Close modal, Clear cart & Show success popup!
     end
 ```
 
 ---
 
-## 🛠️ Công Nghệ Sử Dụng
+## 🛠️ Technology Stack
 
-### Backend (Spring Boot Core)
-* **Spring Boot 3.2.x & Java 17:** Framework lõi mạnh mẽ, hiện đại.
-* **Spring Data JPA & Hibernate:** ORM quản trị quan hệ dữ liệu tối ưu.
-* **PostgreSQL:** Hệ quản trị cơ sở dữ liệu quan hệ mạnh mẽ.
-* **Redis (Dockerized):** Lưu trữ cache trạng thái, mapping dữ liệu giao dịch PayOS siêu tốc độ.
-* **RabbitMQ (Dockerized):** Message Broker chuyển tiếp các sự kiện đồng bộ trạng thái đơn hàng lên hệ thống thông báo.
-* **PayOS Java SDK 2.0.1:** SDK tích hợp thanh toán quét mã QR chuẩn VietQR tự động.
-* **Lombok & MapStruct:** Giảm thiểu boilerplate code và tự động mapping DTOs.
-* **Swagger/OpenAPI 3:** Tài liệu hóa và kiểm thử API tự động.
+Below is a structured overview of the technologies, databases, brokers, and testing frameworks used in the project for easy tracking:
 
-### Frontend (React Storefront)
-* **React 18 & Vite:** Công cụ đóng gói bundle siêu tốc, tối ưu hóa quá trình biên dịch client.
-* **TailwindCSS & Vanilla CSS:** Thiết kế giao diện hiện đại, responsive hoàn hảo, hiệu ứng kính mờ (Glassmorphism) và màu sắc thương hiệu 7-Eleven bắt mắt.
-* **Axios:** Thư viện client HTTP hỗ trợ kết nối API bất đồng bộ và tự động đón bắt lỗi.
-* **Material Symbols:** Sử dụng thư viện icon tối giản cao cấp từ Google Fonts.
+| Component / Layer | Technologies & Tools |
+| --- | --- |
+| **Backend Core** | Java 17, Spring Boot 3.2.x (Spring Data JPA, Spring Security, Spring Web MVC) |
+| **Frontend Core** | React 18, Vite, JavaScript (ES6+), HTML5, Vanilla CSS, TailwindCSS |
+| **Database & Cache** | PostgreSQL (Neon Cloud Database), Redis (In-Memory Database & Cache) |
+| **Message Broker** | RabbitMQ (Event Broadcasting & Bridge) |
+| **Unit Testing & Mocking** | JUnit 5, Mockito, Spring Boot Starter Test |
+| **API Documentation** | Swagger UI, OpenAPI 3 |
+| **Build Tools & Libraries** | Maven, Lombok, MapStruct |
 
 ---
 
-## ⚡ Các Vấn Đề Kỹ Thuật Phức Tạp Đã Được Giải Quyết (Handled Cases)
+## 🚀 Core Backend System Features
 
-Trong quá trình phát triển ứng dụng, dự án đã đối mặt và vượt qua nhiều bài toán kỹ thuật cận-thực-tế đòi hỏi kiến thức chuyên sâu về hệ thống:
+The backend architecture is designed to solve real-world transaction management, concurrency, and caching requirements:
 
-### 1. Giải quyết xung đột `preparedStatements` của PgBouncer (Neon Cloud Postgres DB)
-* **Bài toán:** Neon PostgreSQL Database chạy trên Cloud sử dụng PgBouncer làm bộ điều phối kết nối ở chế độ giao dịch (`transaction pooling mode`). Chế độ này từ chối lưu cache câu lệnh SQL (Prepared Statements) từ Spring Data JPA, khiến kết nối bị đóng đột ngột và sinh ra lỗi nghiêm trọng `Caused by: java.sql.SQLException: Connection is closed`.
-* **Giải pháp:** Cấu hình tham số kết nối trực tiếp trong URL kết nối JDBC ở cả file cấu hình `application.yml` lẫn `.env` bằng cách thêm `&prepareThreshold=0` để vô hiệu hóa hoàn toàn cơ chế lưu đệm câu lệnh của Driver phía client, duy trì kết nối bền vững 100%.
+### 1. Asynchronous POS Stock Reservation
+Instead of executing slow database writes on the main thread during checkout, the system uses an asynchronous event-driven design. 
+* Placing an order triggers a Spring `InventoryDeductEvent`, which is processed asynchronously by the `InventoryEventListener`.
+* To completely eliminate **Race Conditions** and **Overselling** (POS stock conflicts) under high concurrent traffic, we enforce a Pessimistic Write Lock (`PESSIMISTIC_WRITE`) when querying products for reservation, forcing concurrent threads to queue up cleanly.
 
-### 2. Ánh xạ Đơn hàng UUID 128-bit sang Số nguyên 64-bit của PayOS
-* **Bài toán:** ID đơn hàng của chúng ta được thiết kế theo chuẩn bảo mật công nghiệp `UUID` (128-bit dạng chuỗi ký tự). Tuy nhiên, cổng thanh toán PayOS bắt buộc tham số `orderCode` phải là kiểu số nguyên **`long` (64-bit)**. Việc sửa đổi cơ sở dữ liệu quan hệ chỉ để phục vụ cổng thanh toán là một quyết định tồi về mặt kiến trúc.
-* **Giải pháp:** Phát triển cơ chế **Dual Redis Mapping** cực kỳ gọn nhẹ và hiệu năng cao. Khi tạo yêu cầu thanh toán, backend sinh một mã code `long` dựa trên timestamp hệ thống và lưu trữ đồng thời hai khóa ánh xạ song hướng vào Redis với thời gian hết hạn là 24 giờ:
-  - `payos:ordercode:{longCode} -> {UUID}` (phục vụ webhook/callback hoặc tìm ngược đơn hàng).
-  - `payos:uuid:{UUID} -> {longCode}` (phục vụ polling trạng thái thời gian thực từ UI).
+### 2. High-Speed Caching & Temporary Data Mappings with Redis
+**Why Redis?** It is used as a low-latency, in-memory data store for both active caching and temporary state mapping.
+* **JSR310 LocalDateTime Compatibility:** We configured a custom `RedisTemplate` with a customized Jackson `ObjectMapper` registering the `JavaTimeModule`. This prevents standard serialization crashes on Java 8 date/time types.
+* **Bi-directional Transaction Lookup:** PayOS enforces a strict 64-bit `Long` value for `orderCode`, but our system utilizes standard 128-bit `UUID`s. Redis elegantly bridges this gap without relational database changes by storing high-speed transient maps:
+  - `payos:ordercode:{longCode} -> {UUID}`
+  - `payos:uuid:{UUID} -> {longCode}` (with a 24-hour expiration).
 
-### 3. Khóa dòng Bi quan (`PESSIMISTIC_WRITE`) ngăn chặn bán vượt mức tồn kho (Overselling)
-* **Bài toán:** Trong môi trường POS bán lẻ, hàng trăm yêu cầu mua sắm có thể xảy ra đồng thời. Việc kiểm tra số lượng và trừ kho bằng câu lệnh truy vấn thông thường rất dễ dẫn đến tranh chấp tài nguyên (Race Conditions), gây ra hiện tượng bán vượt quá tồn kho thực tế (Overselling).
-* **Giải pháp:** Sử dụng cơ chế Khóa bi quan ghi dòng dữ liệu (`PESSIMISTIC_WRITE`) thông qua `@Lock(LockModeType.PESSIMISTIC_WRITE)` trên Repository khi truy vấn sản phẩm trong luồng kiểm kho bất đồng bộ. Mọi luồng truy cập sau sẽ phải xếp hàng chờ giao dịch hiện tại hoàn tất, đảm bảo tồn kho luôn chính xác tuyệt đối.
+### 3. Asynchronous Event Bridging with RabbitMQ
+**Why RabbitMQ?** It serves as our reliable message broker to decouple external systems and downstream notification pipelines.
+* When a payment transitions to `CONFIRMED`, `RabbitMQInventoryBridge.java` catches the event and publishes a JSON payload to RabbitMQ exchanges. This ensures that notifying delivery partners or triggering email alerts never blocks the core database transactional thread.
 
-### 4. Xử lý giới hạn 25 ký tự mô tả giao dịch của PayOS
-* **Bài toán:** PayOS quy định trường `description` gửi lên để in sao kê ngân hàng chỉ được phép chứa **tối đa 25 ký tự** không dấu. Chuỗi mô tả ban đầu dạng `"Thanh toán đơn hàng #" + orderId` dài 30 ký tự sẽ bị cổng thanh toán từ chối ngay lập tức với lỗi `400 Bad Request`.
-* **Giải pháp:** Thiết kế thuật toán chuẩn hóa chuỗi mô tả, chuyển đổi hoàn toàn sang dạng ASCII không dấu và rút gọn tối đa: `"Thanh toan DH " + orderId.toString().substring(0, 8)` (Đảm bảo luôn nằm trong giới hạn 22 ký tự, an toàn tuyệt đối trước mọi bộ lọc của ngân hàng Việt Nam).
+### 4. Compensation-Based Transaction Flow (Saga Pattern Light)
+Payment and stock deduction states are decoupled to protect merchant inventory:
+* Successful stock deduction reserves the items but leaves the order in a `PENDING` payment state.
+* The backend polls PayOS dynamically during frontend requests. If the transaction expires or is cancelled on PayOS, the backend automatically triggers an `InventoryRestoreEvent` (Compensation Transaction) to restore POS stock levels, evict Redis caches, and update the order state to `CANCELLED`.
 
-### 5. Cấu hình Jackson Serializer tương thích Java 8 DateTime trên Redis Cache
-* **Bài toán:** Spring Boot sử dụng `GenericJackson2JsonRedisSerializer` để lưu trữ đối tượng đơn hàng vào Redis Cache. Khi gặp kiểu dữ liệu thời gian hiện đại `LocalDateTime` (JSR310), serializer mặc định sẽ bị crash kèm lỗi: `Could not write JSON: Java 8 date/time type java.time.LocalDateTime not supported by default`.
-* **Giải pháp:** Thiết kế lại cấu hình hạt nhân `RedisConfig.java`, chủ động đăng ký `JavaTimeModule` vào `ObjectMapper` và vô hiệu hóa tính năng ghi đè ngày tháng dạng timestamp. Giúp việc đọc/ghi cache dữ liệu ngày tháng trên Redis diễn ra trơn tru.
-
-### 6. Trải nghiệm chấm bài frictionless (Không bắt buộc Đăng nhập) cho Nhà tuyển dụng
-* **Bài toán:** Bắt buộc nhà tuyển dụng phải đăng ký tài khoản và điền mã OTP/JWT để chấm điểm các chức năng Admin là một rào cản UX lớn.
-* **Giải pháp:**
-  - Thiết kế chế độ **Anonymous Recruiter (Khách vãng lai)**. Nếu người dùng chưa đăng nhập, thanh Sidebar và Header của Admin sẽ tự động giả lập tài khoản `Khách Demo (Admin)` để nhà tuyển dụng truy cập vào xem danh sách sản phẩm và đơn hàng tức thì.
-  - Tuy nhiên, để đảm bảo tính bảo mật thực tế, nếu người dùng đã đăng nhập tài khoản thường (`CUSTOMER`), hệ thống sẽ **ẩn hoàn toàn** nút "Quản lý" trên Header và sử dụng bộ lọc Router Guard chặn tuyệt đối không cho phép vào vùng quản trị `/admin/**`.
-
-### 7. Tách rời luồng Kiểm kho và Xác nhận thanh toán thực tế (Decoupled Flow)
-* **Bài toán:** Khách hàng mở modal quét mã QR thanh toán nhưng có thể thay đổi ý định và nhấn tắt modal. Nếu đơn hàng chuyển sang `CONFIRMED` ngay sau khi trừ kho thành công thì hệ thống sẽ coi như khách hàng đã trả tiền, làm thất thoát hàng hóa.
-* **Giải pháp:** 
-  - Đơn hàng sau khi trừ kho thành công vẫn sẽ duy trì trạng thái **`PENDING`** (chờ thanh toán).
-  - Backend tích hợp cổng Polling kiểm tra trạng thái thực từ PayOS thông qua hàm `.get(orderCode)`. Khi khách hàng thực hiện quét mã và thanh toán thành công, hệ thống mới cập nhật DB sang `CONFIRMED`.
-  - Nếu khách hàng bấm đóng modal, hệ thống chỉ ẩn modal mà **không xóa giỏ hàng**, đơn hàng vẫn ở trạng thái `PENDING` chờ xử lý tiếp.
-  - Hỗ trợ nút bypass thông minh **"Thanh toán ngay (Demo - Không quét mã)"** dành riêng cho Nhà tuyển dụng kiểm thử nhanh luồng duyệt đơn hàng và trừ kho mà không cần liên kết tài khoản ngân hàng thật!
+### 5. Robust Unit & Transactional Mock Testing
+The backend is backed by an extensive test suite in `ProductServiceTest` using **JUnit 5** and **Mockito**.
+* We isolate and mock dependencies such as `ProductRepository` and `CacheManager` to verify correct behavior under diverse scenarios, including transactional rollbacks, duplicate key creation, and cache eviction validation.
 
 ---
 
-## 🚀 Hướng Dẫn Chạy Dự Án
+## 👨‍💻 Local Setup & Running Guide
 
-### Yêu Cầu Hệ Thống
-* Đã cài đặt **Docker & Docker Compose**.
-* Đã cài đặt **Java 17 (JDK)** và **Node.js (phiên bản 18 trở lên)**.
+### Prerequisites
+* **Docker & Docker Compose** installed.
+* **Java 17 (JDK)** and **Node.js (v18+)** installed.
 
-### Bước 1: Khởi động cơ sở hạ tầng (Docker containers)
-Dự án cung cấp sẵn cấu hình Docker để khởi động Redis và RabbitMQ ngay lập tức:
+### Step 1: Start Infrastructure Containers
+Launch Dockerized Redis and RabbitMQ instantly:
 ```bash
 docker compose up -d
 ```
-*(Hãy chắc chắn rằng cổng `6379` (Redis) và `5672`/`15672` (RabbitMQ) trên máy bạn chưa bị chiếm dụng).*
+*(Ensure ports `6379` for Redis and `5672`/`15672` for RabbitMQ are free).*
 
-### Bước 2: Khởi động Backend (Spring Boot)
-1. Di chuyển vào thư mục `backend` và sao chép cấu hình môi trường mẫu:
+### Step 2: Run Spring Boot Backend
+1. Move to the `backend` directory and duplicate the env template:
    ```bash
    cd backend
    cp .env.example .env
    ```
-2. Mở file `.env` lên và cấu hình thông số kết nối Database Postgres của bạn (hoặc sử dụng thông số Neon Cloud mặc định được thiết lập sẵn). Nếu muốn thử nghiệm thanh toán QR thực tế, hãy điền thông tin Client ID, API Key, Checksum Key lấy từ trang [my.payos.vn](https://my.payos.vn/).
-3. Chạy lệnh đóng gói và khởi động dự án:
+2. Open `.env` and fill in your database details and PayOS API Credentials.
+3. Build and run the backend:
    ```bash
    mvn clean spring-boot:run
    ```
-   *(Backend sẽ khởi động thành công trên cổng mặc định `8080`)*.
+   *(Backend will start on port `8080`)*.
 
-### Bước 3: Khởi động Frontend (React / Vite)
-1. Mở một terminal mới và di chuyển vào thư mục `frontend`:
+### Step 3: Run React Frontend
+1. Open a new terminal and move to the `frontend` directory:
    ```bash
    cd frontend
    npm install
    ```
-2. Khởi chạy máy chủ phát triển cục bộ:
+2. Start the Vite dev server:
    ```bash
    npm run dev
    ```
-3. Mở trình duyệt và truy cập: [http://localhost:3000](http://localhost:3000).
+3. Open your browser and navigate to: [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## 👨‍💻 Trải Nghiệm Các Chức Năng Chính (Dành Cho Nhà Tuyển Dụng)
+## 🔍 Recruitment Review & Testing Walkthrough
 
-1. **Trải nghiệm Client Storefront:** Truy cập [http://localhost:3000/shop](http://localhost:3000/shop), bấm thêm sản phẩm vào giỏ hàng và chiêm ngưỡng hiệu ứng **"Giỏ hàng bay và nảy vật lý"** được thiết kế chi tiết bằng CSS Bezier.
-2. **Kiểm thử luồng thanh toán thực:** Vào giỏ hàng, nhập ghi chú và bấm **"Xác nhận đặt hàng"**. Quét mã VietQR hiển thị trực tiếp trong Iframe để chuyển tiền thật (hoặc tài khoản test sandbox). Đơn hàng sẽ tự động xác nhận thành công và dọn sạch giỏ hàng.
-3. **Kiểm thử luồng Demo bypass:** Nếu chưa điền hoặc không muốn nhập keys PayOS, bạn chỉ cần bấm **"Xác nhận đặt hàng"**, modal sẽ hiển thị trạng thái demo. Click nút màu cam **"Thanh toán ngay (Demo - Không quét mã)"** để chuyển đổi đơn hàng sang `CONFIRMED` lập tức!
-4. **Kiểm thử cổng quản trị Admin:** Click nút **"Quản lý"** ở góc phải Header để chuyển sang trang Quản trị, thực hiện điều chỉnh số lượng tồn kho (POS Stock) hoặc theo dõi trạng thái đơn hàng của hệ thống thời gian thực.
-
----
-
-Cảm ơn bạn đã dành thời gian đánh giá dự án **7-Eleven Flash Delivery (Retail OS)**! Chúc bạn có một trải nghiệm kiểm thử tuyệt vời!
+1. **Physical Flying Cart UX:** Visit [http://localhost:3000/shop](http://localhost:3000/shop). Add a product and observe the physical flying thumbnail Bezier-curve animation, ending with a physical bounce (`.cart-bump`) of the header cart icon.
+2. **Real Payment Integration:** Click the Cart, input a note, and click **"Xác nhận đặt hàng"**. Scan the generated VietQR QR code inside the embedded Iframe to pay (via real gateway or sandbox environment). The storefront polls status and automatically clears the cart upon success.
+3. **Demo Bypass Fast-Track:** If PayOS credentials are empty, the backend returns a clean `400 Bad Request` catching the SDK failure. The frontend falls back to a warning and displays a prominent orange **"Thanh toán ngay (Demo - Không quét mã)"** button. Clicking this instantly updates the order to `CONFIRMED` without any bank transactions!
+4. **Admin Dashboard Portal:** Click **"Quản lý"** in the storefront header (hidden for normal registered customers, visible for guests and admins) to enter the Retail OS Dashboard, where you can modify POS Stock levels and track incoming orders.
