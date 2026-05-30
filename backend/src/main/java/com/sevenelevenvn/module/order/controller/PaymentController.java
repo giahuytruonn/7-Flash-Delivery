@@ -16,6 +16,7 @@ import vn.payos.model.v2.paymentRequests.CreatePaymentLinkRequest;
 import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
 import vn.payos.model.v2.paymentRequests.PaymentLinkItem;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import com.sevenelevenvn.module.order.event.OrderConfirmedEvent;
 
@@ -34,6 +35,9 @@ public class PaymentController {
     private final OrderRepository orderRepository;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ApplicationEventPublisher eventPublisher;
+
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
 
     @PostMapping("/create/{orderId}")
     @Operation(summary = "Tạo link thanh toán PayOS cho đơn hàng", description = "Tạo cổng thanh toán quét mã QR qua PayOS cho mã đơn hàng tương ứng")
@@ -55,8 +59,9 @@ public class PaymentController {
             amount = 2000;
         }
 
-        String returnUrl = "http://localhost:3000/payment-success";
-        String cancelUrl = "http://localhost:3000/payment-cancel";
+        String returnUrl = frontendUrl + "/payment-success";
+        String cancelUrl = frontendUrl + "/payment-cancel";
+
 
         CreatePaymentLinkRequest paymentData = CreatePaymentLinkRequest.builder()
                 .orderCode(orderCode)
