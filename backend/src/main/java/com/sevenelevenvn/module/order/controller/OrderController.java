@@ -64,4 +64,13 @@ public class OrderController {
         OrderStatusResponse status = orderService.getOrderStatus(id);
         return ApiResponse.success(status);
     }
+
+    @PutMapping("/{id}/status")
+    @Operation(summary = "Cập nhật trạng thái đơn hàng (ADMIN)", description = "Yêu cầu quyền ADMIN. Cập nhật trạng thái đơn hàng (PENDING, CONFIRMED, CANCELLED).")
+    public ApiResponse<OrderResponse> updateOrderStatus(
+            @PathVariable UUID id,
+            @RequestParam String status) {
+        OrderResponse order = orderService.updateStatus(id, status);
+        return ApiResponse.success("Cập nhật trạng thái đơn hàng thành công", order);
+    }
 }

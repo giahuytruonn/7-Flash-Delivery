@@ -11,7 +11,11 @@ const Sidebar = () => {
     navigate("/login");
   };
 
-  if (!user) return null;
+  const mockUser = {
+    fullName: "Khách Demo (Admin)",
+    role: "ADMIN"
+  };
+  const activeUser = user || mockUser;
 
   return (
     <nav className="fixed left-0 top-0 h-full w-[260px] bg-[#0D1F17] flex flex-col py-6 px-4 z-50 hidden md:flex">
@@ -32,8 +36,17 @@ const Sidebar = () => {
 
       {/* Nav Links based on Role */}
       <div className="flex-1 space-y-2">
-        {user.role === "ADMIN" ? (
+        {activeUser.role === "ADMIN" ? (
           <>
+            {/* Standout button to return to Client Storefront */}
+            <NavLink
+              to="/shop"
+              className="flex items-center gap-3 px-3 py-2.5 rounded bg-[#F58220] hover:bg-[#E07116] text-white font-extrabold transition-all duration-200 shadow-md mb-4 border border-[#F58220]/20"
+            >
+              <span className="material-symbols-outlined">storefront</span>
+              <span>Về Trang Chủ Shop</span>
+            </NavLink>
+
             <NavLink
               to="/admin/products"
               className={({ isActive }) =>
@@ -83,14 +96,14 @@ const Sidebar = () => {
       <div className="mt-auto pt-4 border-t border-white/10 space-y-4">
         <div className="flex items-center gap-3 px-3">
           <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-sm">
-            {user.fullName?.charAt(0).toUpperCase() || "U"}
+            {activeUser.fullName?.charAt(0).toUpperCase() || "U"}
           </div>
           <div className="overflow-hidden">
             <div className="text-white text-sm font-semibold truncate">
-              {user.fullName || "User"}
+              {activeUser.fullName || "User"}
             </div>
             <div className="text-white/40 text-[10px] uppercase font-bold tracking-wider">
-              {user.role}
+              {activeUser.role}
             </div>
           </div>
         </div>

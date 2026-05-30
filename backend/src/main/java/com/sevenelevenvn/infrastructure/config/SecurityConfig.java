@@ -52,7 +52,11 @@ public class SecurityConfig {
                 // Order operations (Public for Demo)
                 .requestMatchers(HttpMethod.POST, "/api/orders").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/orders/*/status").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/api/orders/*/status").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/orders/my").permitAll()
+                
+                // Payments operations (Public for Demo)
+                .requestMatchers("/api/payments/**").permitAll()
                 
                 // Order management (Public for Demo)
                 .requestMatchers(HttpMethod.GET, "/api/orders").permitAll()

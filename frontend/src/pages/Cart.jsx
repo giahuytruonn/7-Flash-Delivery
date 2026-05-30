@@ -18,6 +18,12 @@ const Cart = () => {
   const [pollError, setPollError] = useState("");
   const [showResultModal, setShowResultModal] = useState(false);
 
+  // PayOS State variables
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState("");
+  const [qrCode, setQrCode] = useState("");
+  const [loadingPaymentLink, setLoadingPaymentLink] = useState(false);
+
   // Polling logic for async stock deduction
   useEffect(() => {
     let intervalId;
@@ -67,12 +73,51 @@ const Cart = () => {
     const result = await checkout(note);
 
     if (result.success) {
-      setPollOrderId(result.orderId);
+      const orderId = result.orderId;
+      setPollOrderId(orderId);
       setNote("");
+      
+      // Khởi tạo liên kết thanh toán PayOS
+      try {
+        setLoadingPaymentLink(true);
+        setShowPaymentModal(true);
+        const payResponse = await api.post(`/payments/create/${orderId}`);
+        const payData = payResponse.data.data;
+        setCheckoutUrl(payData.checkoutUrl);
+        setQrCode(payData.qrCode);
+        setLoadingPaymentLink(false);
+      } catch (err) {
+        console.error("Lỗi khi tạo liên kết thanh toán PayOS:", err);
+        setLoadingPaymentLink(false);
+        // Fallback nếu chưa cấu hình PayOS keys trong .env
+        setCheckoutUrl("");
+      }
     } else {
       setPlacingOrder(false);
       alert(result.message);
     }
+  };
+
+  // Xác nhận thanh toán nhanh (Demo - Bỏ qua QR)
+  const handleConfirmDemoSuccess = async () => {
+    if (!pollOrderId) return;
+    try {
+      setPlacingOrder(true);
+      await api.post(`/payments/confirm-success/${pollOrderId}`);
+      // Trình Polling tự động kiểm tra trạng thái và mở modal Thành công sau 1.5s
+      setShowPaymentModal(false);
+      clearCart(); // Làm sạch giỏ hàng khi thanh toán xong
+    } catch (err) {
+      console.error("Lỗi khi xác nhận thanh toán demo:", err);
+      alert("Xác nhận thanh toán demo thất bại.");
+      setPlacingOrder(false);
+    }
+  };
+
+  const handleClosePaymentModal = () => {
+    setShowPaymentModal(false);
+    setPollOrderId(null); // Dừng Polling đơn hàng này
+    setPlacingOrder(false);
   };
 
   const handleLogout = () => {
@@ -400,6 +445,86 @@ const Cart = () => {
             >
               Đồng ý
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* PayOS Payment Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151c27]/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-lg w-full flex flex-col shadow-2xl border border-outline-variant/20 overflow-hidden animate-fade-in max-h-[90vh]">
+            
+            {/* Modal Header */}
+            <div className="px-6 py-4 bg-slate-50 border-b border-outline-variant/20 flex items-center justify-between">
+              <h3 className="font-extrabold text-sm text-primary flex items-center gap-2">
+                <span className="material-symbols-outlined text-xl text-primary animate-pulse">credit_card</span>
+                Cổng thanh toán POS PayOS (Demo)
+              </h3>
+              <button 
+                onClick={handleClosePaymentModal}
+                className="p-1.5 rounded-full hover:bg-slate-200 text-on-surface-variant transition-colors"
+                title="Đóng"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="flex-grow p-6 overflow-y-auto space-y-6 flex flex-col items-center">
+              
+              {loadingPaymentLink ? (
+                <div className="py-12 flex flex-col items-center justify-center space-y-4">
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
+                  <p className="text-xs font-bold text-primary animate-pulse">Đang liên kết với cổng thanh toán PayOS...</p>
+                </div>
+              ) : checkoutUrl ? (
+                <div className="w-full space-y-4">
+                  <div className="text-[11px] text-on-surface-variant font-semibold text-center bg-slate-50 p-2.5 rounded-lg border border-outline-variant/30">
+                    Để thực hiện thanh toán, vui lòng quét mã QR trên cổng PayOS bên dưới.
+                  </div>
+                  {/* Embedded Iframe */}
+                  <div className="w-full h-[360px] rounded-xl border border-outline-variant/40 bg-slate-100 overflow-hidden shadow-inner relative">
+                    <iframe 
+                      src={checkoutUrl} 
+                      className="w-full h-full border-0" 
+                      title="Cổng thanh toán PayOS"
+                    ></iframe>
+                  </div>
+                </div>
+              ) : (
+                <div className="py-6 text-center space-y-3">
+                  <span className="material-symbols-outlined text-5xl text-orange-500 bg-orange-50 p-3 rounded-full mb-2 inline-block">
+                    info
+                  </span>
+                  <div className="space-y-1">
+                    <h4 className="font-extrabold text-sm text-on-surface">Cấu hình PayOS chưa kích hoạt</h4>
+                    <p className="text-xs text-on-surface-variant leading-relaxed max-w-sm">
+                      Do bạn chưa điền API keys cho PayOS tại `.env`, liên kết thanh toán QR không thể khởi tạo.
+                    </p>
+                  </div>
+                  <div className="text-xs font-semibold text-green-700 bg-green-50 p-2.5 rounded-lg border border-green-200">
+                    Đừng lo lắng! Bạn vẫn có thể sử dụng nút "Thanh toán ngay (Demo)" bên dưới để hoàn tất đơn hàng tức thì!
+                  </div>
+                </div>
+              )}
+              
+              {/* Demo Fast Checkout Panel */}
+              <div className="w-full border-t border-dashed border-slate-200 pt-4 space-y-3 text-center">
+                <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Khử tác vụ test nhanh (Recruiter Mode)</div>
+                <button
+                  onClick={handleConfirmDemoSuccess}
+                  className="w-full py-3 rounded-xl bg-[#F58220] hover:bg-[#E07116] text-white font-extrabold text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined">payments</span>
+                  <span>Thanh toán ngay (Demo - Không quét mã)</span>
+                </button>
+                <p className="text-[9px] text-on-surface-variant font-semibold">
+                  * Nhấp nút màu cam để lập tức duyệt đơn hàng <b>CONFIRMED</b> và đồng bộ trừ kho mà không cần thanh toán thực!
+                </p>
+              </div>
+
+            </div>
+
           </div>
         </div>
       )}

@@ -166,6 +166,23 @@ public class OrderService {
                 .build();
     }
 
+    @Transactional
+    public OrderResponse updateStatus(UUID id, String statusStr) {
+        log.info("Bắt đầu cập nhật trạng thái đơn hàng ID: {} sang {}", id, statusStr);
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng với ID: " + id));
+
+        try {
+            OrderStatus status = OrderStatus.valueOf(statusStr.toUpperCase());
+            order.setStatus(status);
+            Order saved = orderRepository.save(order);
+            log.info("Cập nhật trạng thái đơn hàng ID: {} thành công", id);
+            return toResponse(saved);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Trạng thái đơn hàng không hợp lệ: " + statusStr);
+        }
+    }
+
     private OrderResponse toResponse(Order order) {
         List<OrderItemResponse> itemResponses = order.getItems().stream()
                 .map(item -> OrderItemResponse.builder()

@@ -75,6 +75,17 @@ const UserShop = () => {
     };
     
     setFlyingItems((prev) => [...prev, newItem]);
+
+    // Satisfying micro-interaction: Pop the navbar cart icon when the flying item "lands" (around 750ms)
+    setTimeout(() => {
+      if (cartIcon) {
+        cartIcon.classList.add("cart-bump");
+        // Remove class after animation ends (450ms)
+        setTimeout(() => {
+          cartIcon.classList.remove("cart-bump");
+        }, 450);
+      }
+    }, 750);
   };
 
   const handleLogout = () => {

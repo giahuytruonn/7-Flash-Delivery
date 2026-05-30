@@ -10,9 +10,9 @@ spring:
       max-request-size: 10MB
   
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/seveneleven}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    url: ${SPRING_DATASOURCE_URL:x}
+    username: ${SPRING_DATASOURCE_USERNAME:x}
+    password: ${SPRING_DATASOURCE_PASSWORD:x}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -45,12 +45,16 @@ spring:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:7eleven-vietnam-super-secret-key-2024-production}
+    secret: ${JWT_SECRET:x}
     expiration-ms: 86400000 # 24 hours
   cloudinary:
-    cloud-name: ${CLOUDINARY_CLOUD_NAME}
-    api-key: ${CLOUDINARY_API_KEY}
-    api-secret: ${CLOUDINARY_API_SECRET}
+    cloud-name: ${CLOUDINARY_CLOUD_NAME:x}
+    api-key: ${CLOUDINARY_API_KEY:x}
+    api-secret: ${CLOUDINARY_API_SECRET:x}
+  payos:
+    client-id: ${PAYOS_CLIENT_ID:x}
+    api-key: ${PAYOS_API_KEY:x}
+    checksum-key: ${PAYOS_CHECKSUM_KEY:x}
 
 logging:
   level:

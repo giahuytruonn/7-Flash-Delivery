@@ -4,7 +4,11 @@ import { useAuth } from "../context/AuthContext";
 const Header = ({ title = "7-Eleven Retail OS", searchQuery, setSearchQuery, placeholder = "Tìm kiếm..." }) => {
   const { user } = useAuth();
 
-  if (!user) return null;
+  const mockUser = {
+    fullName: "Khách Demo (Admin)",
+    role: "ADMIN"
+  };
+  const activeUser = user || mockUser;
 
   return (
     <header className="fixed top-0 right-0 border-b border-outline-variant bg-[#f9f9ff] flex justify-between items-center w-full px-6 py-4 h-16 ml-[260px] max-w-[calc(100%-260px)] z-40 hidden md:flex">
@@ -37,7 +41,7 @@ const Header = ({ title = "7-Eleven Retail OS", searchQuery, setSearchQuery, pla
         </div>
 
         <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-sm">
-          {user.fullName?.charAt(0).toUpperCase() || "U"}
+          {activeUser.fullName?.charAt(0).toUpperCase() || "U"}
         </div>
       </div>
     </header>

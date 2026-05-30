@@ -82,6 +82,18 @@ const OrderManagement = () => {
     }
   };
 
+  const handleUpdateStatus = async (orderId, newStatus) => {
+    try {
+      await api.put(`/orders/${orderId}/status`, null, {
+        params: { status: newStatus }
+      });
+      fetchOrders();
+    } catch (error) {
+      console.error("Lỗi khi cập nhật trạng thái đơn hàng:", error);
+      alert("Cập nhật trạng thái thất bại: " + (error.response?.data?.message || error.message));
+    }
+  };
+
   // Filter orders based on the search query (matching order ID)
   const filteredOrders = orders.filter((order) => {
     if (!searchQuery) return true;
@@ -289,7 +301,7 @@ const OrderManagement = () => {
                                   <div className="bg-white rounded-xl border border-outline-variant/30 p-5 shadow-sm space-y-4 max-w-[1200px] mx-auto animate-fade-in">
                                     
                                     {/* Order Details Header */}
-                                    <div className="flex justify-between items-center pb-3 border-b border-outline-variant/20">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-outline-variant/20 gap-3">
                                       <div>
                                         <h3 className="font-bold text-sm text-on-surface flex items-center gap-1.5">
                                           <span className="material-symbols-outlined text-primary text-lg">receipt_long</span>
@@ -300,11 +312,24 @@ const OrderManagement = () => {
                                         </div>
                                       </div>
                                       
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Cập nhật lúc:</span>
-                                        <span className="text-xs font-bold text-on-surface-variant">
-                                          {new Date(order.updatedAt).toLocaleTimeString("vi-VN")}
-                                        </span>
+                                      <div className="flex flex-wrap items-center gap-4">
+                                        {/* Interactive Order Status Dropdown */}
+                                        <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-outline-variant/40">
+                                          <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Trạng thái:</span>
+                                          <select
+                                            value={order.status}
+                                            onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
+                                            className="h-8 px-2 rounded border border-outline-variant bg-white focus:border-primary outline-none text-xs font-bold text-on-surface cursor-pointer"
+                                          >
+                                            <option value="PENDING">Chờ xử lý (PENDING)</option>
+                                            <option value="CONFIRMED">Thành công (CONFIRMED)</option>
+                                            <option value="CANCELLED">Đã hủy (CANCELLED)</option>
+                                          </select>
+                                        </div>
+
+                                        <div className="text-right text-[10px] font-bold text-on-surface-variant">
+                                          Cập nhật lúc: <span className="text-xs font-bold">{new Date(order.updatedAt).toLocaleTimeString("vi-VN")}</span>
+                                        </div>
                                       </div>
                                     </div>
 

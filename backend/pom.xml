@@ -108,6 +108,13 @@
             <version>1.36.0</version>
         </dependency>
 
+        <!-- PayOS SDK -->
+        <dependency>
+            <groupId>vn.payos</groupId>
+            <artifactId>payos-java</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
