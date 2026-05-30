@@ -41,6 +41,10 @@ app:
   jwt:
     secret: ${JWT_SECRET:7eleven-vietnam-super-secret-key-2024-production}
     expiration-ms: 86400000 # 24 hours
+  cloudinary:
+    cloud-name: ${CLOUDINARY_CLOUD_NAME}
+    api-key: ${CLOUDINARY_API_KEY}
+    api-secret: ${CLOUDINARY_API_SECRET}
 
 logging:
   level:
