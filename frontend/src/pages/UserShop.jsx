@@ -15,6 +15,7 @@ const UserShop = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState(null); // Chi tiết sản phẩm đang xem
 
   // Ref to scroll to products grid
   const productsRef = useRef(null);
@@ -46,6 +47,7 @@ const UserShop = () => {
   }, [categoryFilter, searchQuery]);
 
   const handleAddToCart = (e, prod) => {
+    e.stopPropagation();
     addToCart(prod);
 
     // Get starting coordinates from the clicked button
@@ -336,7 +338,8 @@ const UserShop = () => {
               {products.map((prod) => (
                 <div 
                   key={prod.id} 
-                  className="bg-white rounded-2xl border border-outline-variant/30 overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col h-full focus-within:ring-2 focus-within:ring-primary"
+                  onClick={() => setSelectedProduct(prod)}
+                  className="bg-white rounded-2xl border border-outline-variant/30 overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col h-full focus-within:ring-2 focus-within:ring-primary cursor-pointer"
                 >
                   {/* Image wrapper */}
                   <div className="relative h-40 md:h-44 w-full bg-slate-100 border-b border-outline-variant/20 overflow-hidden flex-shrink-0">
@@ -349,7 +352,12 @@ const UserShop = () => {
                       }}
                     />
                     <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-white/90 backdrop-blur-sm text-primary font-bold text-[9px] uppercase shadow-sm">
-                      {prod.category}
+                      {prod.category === "Bakery" ? "Đồ nóng" :
+                       prod.category === "Beverage" ? "Thức uống" :
+                       prod.category === "Snack" ? "Ăn vặt" :
+                       prod.category === "Instant Food" ? "Ăn liền" :
+                       prod.category === "Dairy" ? "Thiết yếu" :
+                       prod.category === "Combo" ? "Combo" : (prod.category || "N/A")}
                     </span>
                   </div>
 
@@ -391,6 +399,122 @@ const UserShop = () => {
           )}
         </section>
       </main>
+
+      {/* Product Details Popup Modal */}
+      {selectedProduct && (
+        <div 
+          onClick={() => setSelectedProduct(null)}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl relative border border-outline-variant/30 animate-scale-up flex flex-col max-h-[90vh]"
+          >
+            {/* Top Close Button */}
+            <button 
+              onClick={() => setSelectedProduct(null)}
+              className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 hover:bg-white backdrop-blur-sm text-on-surface hover:text-primary transition-all flex items-center justify-center shadow-md z-10 cursor-pointer"
+              title="Đóng"
+            >
+              <span className="material-symbols-outlined text-lg font-bold">close</span>
+            </button>
+
+            {/* Product Image Header */}
+            <div className="relative h-60 w-full bg-slate-100 flex-shrink-0">
+              <img 
+                src={selectedProduct.imageUrl} 
+                alt={selectedProduct.name} 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.src = "https://placehold.co/600x400?text=7-Eleven";
+                }}
+              />
+              <span className="absolute bottom-4 left-4 px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm text-primary font-bold text-xs uppercase shadow-sm border border-outline-variant/20">
+                {selectedProduct.category === "Bakery" ? "Đồ nóng" :
+                 selectedProduct.category === "Beverage" ? "Thức uống" :
+                 selectedProduct.category === "Snack" ? "Ăn vặt" :
+                 selectedProduct.category === "Instant Food" ? "Ăn liền" :
+                 selectedProduct.category === "Dairy" ? "Thiết yếu" :
+                 selectedProduct.category === "Combo" ? "Combo" : (selectedProduct.category || "N/A")}
+              </span>
+            </div>
+
+            {/* Product Details Content */}
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
+              <div className="space-y-1">
+                <h3 className="font-black text-xl md:text-2xl text-on-surface leading-snug">
+                  {selectedProduct.name}
+                </h3>
+                <div className="text-xs font-mono text-on-surface-variant uppercase tracking-wider flex items-center gap-2">
+                  <span>SKU: {selectedProduct.sku}</span>
+                  <span className="text-slate-300">|</span>
+                  <span className="font-sans font-semibold text-slate-500">Mã: #{selectedProduct.id.slice(0, 8).toUpperCase()}</span>
+                </div>
+              </div>
+
+              {/* Price & Stock Status Grid */}
+              <div className="grid grid-cols-2 gap-4 py-2 border-t border-b border-outline-variant/20">
+                <div className="flex flex-col justify-center">
+                  <span className="text-xs text-on-surface-variant font-bold">Giá bán</span>
+                  <span className="text-xl font-black text-primary">
+                    {selectedProduct.price.toLocaleString("vi-VN")}₫
+                  </span>
+                </div>
+                <div className="flex flex-col justify-center items-end">
+                  <span className="text-xs text-on-surface-variant font-bold mb-1">Tình trạng kho</span>
+                  {selectedProduct.stockQuantity <= 0 ? (
+                    <span className="px-2.5 py-1 rounded-md bg-red-50 text-red-600 font-bold text-xs">
+                      Hết hàng tạm thời
+                    </span>
+                  ) : selectedProduct.stockQuantity <= 10 ? (
+                    <div className="flex flex-col items-end">
+                      <span className="px-2.5 py-1 rounded-md bg-orange-50 text-orange-600 font-bold text-xs">
+                        Sắp hết ({selectedProduct.stockQuantity})
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="px-2.5 py-1 rounded-md bg-green-50 text-green-700 font-bold text-xs flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                      Còn hàng ({selectedProduct.stockQuantity})
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Detailed Description */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Mô tả sản phẩm</h4>
+                <div className="bg-slate-50/70 p-4 rounded-2xl border border-outline-variant/20 text-xs md:text-sm text-on-surface-variant leading-relaxed min-h-[90px]">
+                  {selectedProduct.description || "Sản phẩm 7-Eleven chất lượng cao, tươi ngon và an toàn vệ sinh thực phẩm. Thích hợp dùng trực tiếp trong ngày để có trải nghiệm hương vị tốt nhất."}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="p-6 border-t border-outline-variant/10 bg-slate-50/50 flex-shrink-0">
+              {selectedProduct.stockQuantity <= 0 ? (
+                <button
+                  disabled
+                  className="w-full h-12 rounded-xl bg-slate-200 text-slate-400 font-bold text-sm cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined">error</span>
+                  Sản phẩm đã hết hàng
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    handleAddToCart(e, selectedProduct);
+                  }}
+                  className="w-full h-12 rounded-xl bg-primary text-white hover:bg-primary-container font-bold flex items-center justify-center gap-2 hover:scale-[1.01] transition-all shadow-md focus:ring-2 focus:ring-primary cursor-pointer text-sm"
+                >
+                  <span className="material-symbols-outlined text-lg">shopping_cart</span>
+                  Thêm vào giỏ hàng — {selectedProduct.price.toLocaleString("vi-VN")}₫
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Flying Items Animation Overlay */}
       {flyingItems.map((item) => (
