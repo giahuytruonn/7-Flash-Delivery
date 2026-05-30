@@ -40,6 +40,8 @@ const Cart = () => {
             clearInterval(intervalId);
             setPlacingOrder(false);
             setPollOrderId(null);
+            setShowPaymentModal(false);
+            clearCart();
             setShowResultModal(true);
           } else if (status === "CANCELLED") {
             clearInterval(intervalId);

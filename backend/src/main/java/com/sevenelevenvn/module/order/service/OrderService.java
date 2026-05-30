@@ -15,13 +15,18 @@ import com.sevenelevenvn.module.product.entity.Product;
 import com.sevenelevenvn.module.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.payos.PayOS;
+import com.sevenelevenvn.module.order.event.OrderConfirmedEvent;
+import com.sevenelevenvn.module.order.event.OrderCancelledEvent;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -37,6 +42,9 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final OrderEventPublisher orderEventPublisher;
+    private final PayOS payOS;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public OrderStatusResponse createOrder(CreateOrderRequest request) {
@@ -159,6 +167,32 @@ public class OrderService {
                 throw new AccessDeniedException("Bạn không có quyền truy cập thông tin đơn hàng này");
             }
         }
+
+        if (order.getStatus() == OrderStatus.PENDING) {
+            String orderCodeStr = (String) redisTemplate.opsForValue().get("payos:uuid:" + id.toString());
+            if (orderCodeStr != null) {
+                try {
+                    long orderCode = Long.parseLong(orderCodeStr);
+                    vn.payos.model.v2.paymentRequests.PaymentLink payInfo = payOS.paymentRequests().get(orderCode);
+                    String payStatus = payInfo.getStatus() != null ? payInfo.getStatus().toString() : "";
+                    if ("PAID".equalsIgnoreCase(payStatus)) {
+                        log.info("PayOS xác nhận đã thanh toán thành công cho đơn hàng ID: {}, mã Code: {}", id, orderCode);
+                        order.setStatus(OrderStatus.CONFIRMED);
+                        order = orderRepository.save(order);
+                        eventPublisher.publishEvent(new OrderConfirmedEvent(id));
+                    } else if ("CANCELLED".equalsIgnoreCase(payStatus)) {
+                        log.info("PayOS xác nhận thanh toán đơn hàng ID: {}, mã Code: {} đã bị HỦY", id, orderCode);
+                        order.setStatus(OrderStatus.CANCELLED);
+                        order = orderRepository.save(order);
+                        eventPublisher.publishEvent(new OrderCancelledEvent(id, "Hủy thanh toán trên cổng PayOS"));
+                        orderEventPublisher.publishRestoreEvent(order);
+                    }
+                } catch (Exception e) {
+                    log.debug("Không thể kiểm tra trạng thái PayOS cho đơn hàng ID: {}. Lỗi: {}", id, e.getMessage());
+                }
+            }
+        }
+
 
         return OrderStatusResponse.builder()
                 .orderId(order.getId())

@@ -16,6 +16,9 @@ import vn.payos.model.v2.paymentRequests.CreatePaymentLinkRequest;
 import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
 import vn.payos.model.v2.paymentRequests.PaymentLinkItem;
 
+import org.springframework.context.ApplicationEventPublisher;
+import com.sevenelevenvn.module.order.event.OrderConfirmedEvent;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -30,6 +33,7 @@ public class PaymentController {
     private final PayOS payOS;
     private final OrderRepository orderRepository;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     @PostMapping("/create/{orderId}")
     @Operation(summary = "Tạo link thanh toán PayOS cho đơn hàng", description = "Tạo cổng thanh toán quét mã QR qua PayOS cho mã đơn hàng tương ứng")
@@ -43,6 +47,7 @@ public class PaymentController {
 
         // Lưu ánh xạ giữa orderCode (long) và orderId (UUID) vào Redis trong 24 giờ
         redisTemplate.opsForValue().set("payos:ordercode:" + orderCode, orderId.toString(), java.time.Duration.ofHours(24));
+        redisTemplate.opsForValue().set("payos:uuid:" + orderId.toString(), String.valueOf(orderCode), java.time.Duration.ofHours(24));
 
         long amount = order.getTotalAmount().longValue();
         if (amount < 2000) {
@@ -55,18 +60,24 @@ public class PaymentController {
 
         CreatePaymentLinkRequest paymentData = CreatePaymentLinkRequest.builder()
                 .orderCode(orderCode)
-                .amount(amount)
+                .amount(3000L)
                 .description("Thanh toán đơn hàng #" + orderId.toString().substring(0, 8))
                 .returnUrl(returnUrl)
                 .cancelUrl(cancelUrl)
                 .item(PaymentLinkItem.builder()
                         .name("Đơn hàng 7-Eleven")
-                        .price(amount)
+                        .price(3000L)
                         .quantity(1)
                         .build())
                 .build();
 
-        CreatePaymentLinkResponse response = payOS.paymentRequests().create(paymentData);
+        CreatePaymentLinkResponse response;
+        try {
+            response = payOS.paymentRequests().create(paymentData);
+        } catch (Exception e) {
+            log.warn("Không thể tạo liên kết thanh toán từ PayOS cho đơn hàng ID: {}. Có thể do API keys chưa được cấu hình chính xác. Lỗi: {}", orderId, e.getMessage());
+            throw new IllegalArgumentException("Không thể khởi tạo cổng thanh toán PayOS. Vui lòng sử dụng phương thức Demo hoặc cấu hình lại API Keys trong .env. Lỗi chi tiết: " + e.getMessage());
+        }
 
         Map<String, Object> result = new HashMap<>();
         result.put("checkoutUrl", response.getCheckoutUrl());
@@ -88,6 +99,9 @@ public class PaymentController {
 
         order.setStatus(OrderStatus.CONFIRMED);
         Order savedOrder = orderRepository.save(order);
+
+        // Publish OrderConfirmedEvent so RabbitMQ / other listeners can sync up
+        eventPublisher.publishEvent(new OrderConfirmedEvent(orderId));
 
         log.info("Đơn hàng ID: {} đã được chuyển trạng thái sang CONFIRMED thành công", orderId);
         return ApiResponse.success("Thanh toán đơn hàng thành công", Map.of(

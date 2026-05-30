@@ -36,4 +36,23 @@ public class OrderEventPublisher {
         eventPublisher.publishEvent(event);
         log.info("Đã phát hành sự kiện InventoryDeductEvent cho đơn hàng ID: {}", order.getId());
     }
+
+    public void publishRestoreEvent(Order order) {
+        log.info("Chuẩn bị phát hành sự kiện hoàn trả kho cho đơn hàng ID: {}", order.getId());
+
+        List<com.sevenelevenvn.module.product.event.InventoryRestoreEvent.RestoreItem> restoreItems = order.getItems().stream()
+                .map(item -> com.sevenelevenvn.module.product.event.InventoryRestoreEvent.RestoreItem.builder()
+                        .productId(item.getProductId())
+                        .quantity(item.getQuantity())
+                        .build())
+                .collect(Collectors.toList());
+
+        com.sevenelevenvn.module.product.event.InventoryRestoreEvent event = com.sevenelevenvn.module.product.event.InventoryRestoreEvent.builder()
+                .orderId(order.getId())
+                .items(restoreItems)
+                .build();
+
+        eventPublisher.publishEvent(event);
+        log.info("Đã phát hành sự kiện InventoryRestoreEvent cho đơn hàng ID: {}", order.getId());
+    }
 }

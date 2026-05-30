@@ -72,9 +72,8 @@ public class InventoryEventListener {
         }
 
         if (isSufficient) {
-            // Confirm Order Event
-            log.info("Trừ kho thành công cho toàn bộ sản phẩm của đơn hàng ID: {}", orderId);
-            eventPublisher.publishEvent(new OrderConfirmedEvent(orderId));
+            log.info("Trừ kho thành công cho toàn bộ sản phẩm của đơn hàng ID: {} (Chờ thanh toán qua PayOS)", orderId);
+            // DO NOT publish OrderConfirmedEvent here! The order stays PENDING until payment is confirmed.
             
             // Evict caches
             for (var p : progressList) {
