@@ -100,7 +100,7 @@ const UserShop = () => {
               onClick={() => { setCategoryFilter(""); setSearchQuery(""); }}
               className="text-2xl font-black text-primary tracking-tight cursor-pointer"
             >
-              7-Eleven Vietnam
+              7-Flash Delivery
             </span>
           </div>
 
@@ -216,14 +216,6 @@ const UserShop = () => {
               Thưởng thức món ăn tươi ngon chuẩn vị 7-Eleven. Đặt hàng POS nhanh không cần tài khoản!
             </p>
           </div>
-
-          <button 
-            onClick={() => navigate("/cart")}
-            className="px-4 py-2 bg-primary text-on-primary text-xs font-bold rounded-xl hover:bg-primary-container transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-base">shopping_cart_checkout</span>
-            Xem giỏ hàng ({cart.reduce((sum, item) => sum + item.quantity, 0)})
-          </button>
         </div>
 
         {/* Product Grid */}
