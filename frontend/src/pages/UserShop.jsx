@@ -4,6 +4,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import screenImg from "../assets/screen.png";
 
 const UserShop = () => {
   const navigate = useNavigate();
@@ -230,7 +231,7 @@ const UserShop = () => {
           <img 
             alt="Freshness at Your Doorstep - 7-Eleven Vietnam Delivery" 
             className="absolute inset-0 w-full h-full object-cover z-0" 
-            src="https://images.unsplash.com/photo-1543007630-9710e4a00a20?auto=format&fit=crop&w=1200&q=80" 
+            src={screenImg}
             onError={(e) => {
               e.target.src = "https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=1200&q=80";
             }}
