@@ -143,7 +143,7 @@ const OrderManagement = () => {
       />
 
       {/* Main Content Area */}
-      <main className="md:ml-[260px] pt-20 p-6 md:p-8 min-h-screen bg-slate-50">
+      <main className="md:ml-[260px] px-6 pb-6 pt-20 md:px-8 md:pb-8 md:pt-24 min-h-screen bg-slate-50">
         <div className="max-w-[1440px] mx-auto space-y-6">
           
           {/* Header */}

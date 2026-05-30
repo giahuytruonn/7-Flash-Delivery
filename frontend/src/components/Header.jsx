@@ -11,7 +11,7 @@ const Header = ({ title = "7-Flash Delivery", searchQuery, setSearchQuery, place
   const activeUser = user || mockUser;
 
   return (
-    <header className="fixed top-0 right-0 border-b border-outline-variant bg-[#f9f9ff] flex justify-between items-center w-full px-6 py-4 h-16 ml-[260px] max-w-[calc(100%-260px)] z-40 hidden md:flex">
+    <header className="fixed top-0 left-[260px] right-0 border-b border-outline-variant bg-[#f9f9ff] flex justify-between items-center px-6 py-4 h-16 z-40 hidden md:flex">
       <div className="font-bold text-lg text-on-background">{title}</div>
       
       <div className="flex items-center gap-6">

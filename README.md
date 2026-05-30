@@ -1,5 +1,11 @@
 # ⚡ 7-Flash Delivery - Retail OS
 
+> **⚡ Premium Retail Management & Rapid Storefront Client**
+>
+> * **🚀 Live Production Storefront:** [https://7-flash-delivery.vercel.app/shop](https://7-flash-delivery.vercel.app/shop)
+> * **🔌 Live Backend API Production:** [https://seven-flash-delivery.onrender.com](https://seven-flash-delivery.onrender.com)
+> * **📖 Interactive API Docs (Swagger):** [https://seven-flash-delivery.onrender.com/swagger-ui/index.html](https://seven-flash-delivery.onrender.com/swagger-ui/index.html)
+
 Welcome to **7-Flash Delivery (Retail OS)** — a premium retail management and rapid delivery storefront integrated with an automated payment gateway. This system is designed as a modular monolith following **Domain-Driven Design (DDD)** and **Clean Architecture** principles to showcase high-concurrency backend stability, event-driven communications, and sleek responsive frontend user experiences.
 
 ---
@@ -72,14 +78,14 @@ sequenceDiagram
 
 ## 🛠️ Technology Stack
 
-Below is a structured overview of the technologies, databases, brokers, and testing frameworks used in the project for easy tracking:
+Below is a structured overview of the technologies, databases, brokers, and testing frameworks used in the project:
 
 | Component / Layer | Technologies & Tools |
 | --- | --- |
 | **Backend Core** | Java 17, Spring Boot 3.2.x (Spring Data JPA, Spring Security, Spring Web MVC) |
 | **Frontend Core** | React 18, Vite, JavaScript (ES6+), HTML5, Vanilla CSS, TailwindCSS |
-| **Database & Cache** | PostgreSQL (Neon Cloud Database), Redis (In-Memory Database & Cache) |
-| **Message Broker** | RabbitMQ (Event Broadcasting & Bridge) |
+| **Database & Cache** | PostgreSQL (Neon Cloud Database), Redis (Upstash In-Memory Database & Cache) |
+| **Message Broker** | RabbitMQ (CloudAMQP Broker & Event Broadcasting Bridge) |
 | **Unit Testing & Mocking** | JUnit 5, Mockito, Spring Boot Starter Test |
 | **API Documentation** | Swagger UI, OpenAPI 3 |
 | **Build Tools & Libraries** | Maven, Lombok, MapStruct |
@@ -159,7 +165,7 @@ docker compose up -d
 
 ## 🔍 Recruitment Review & Testing Walkthrough
 
-1. **Physical Flying Cart UX:** Visit [http://localhost:3000/shop](http://localhost:3000/shop). Add a product and observe the physical flying thumbnail Bezier-curve animation, ending with a physical bounce (`.cart-bump`) of the header cart icon.
+1. **Physical Flying Cart UX:** Visit [https://7-flash-delivery.vercel.app/shop](https://7-flash-delivery.vercel.app/shop) (or local `localhost:3000/shop`). Add a product and observe the physical flying thumbnail Bezier-curve animation, ending with a physical bounce (`.cart-bump`) of the header cart icon.
 2. **Real Payment Integration:** Click the Cart, input a note, and click **"Xác nhận đặt hàng"**. Scan the generated VietQR QR code inside the embedded Iframe to pay (via real gateway or sandbox environment). The storefront polls status and automatically clears the cart upon success.
 3. **Demo Bypass Fast-Track:** If PayOS credentials are empty, the backend returns a clean `400 Bad Request` catching the SDK failure. The frontend falls back to a warning and displays a prominent orange **"Thanh toán ngay (Demo - Không quét mã)"** button. Clicking this instantly updates the order to `CONFIRMED` without any bank transactions!
 4. **Admin Dashboard Portal:** Click **"Quản lý"** in the storefront header (hidden for normal registered customers, visible for guests and admins) to enter the Retail OS Dashboard, where you can modify POS Stock levels and track incoming orders.

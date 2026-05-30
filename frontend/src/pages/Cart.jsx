@@ -124,7 +124,7 @@ const Cart = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/shop");
   };
 
   return (

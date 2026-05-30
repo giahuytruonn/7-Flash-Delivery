@@ -90,7 +90,7 @@ const UserShop = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/shop");
   };
 
   const scrollToProducts = () => {
