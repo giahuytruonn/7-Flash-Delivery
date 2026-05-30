@@ -165,15 +165,17 @@ const UserShop = () => {
             <div className="p-2 hover:bg-slate-100 rounded-full transition-colors hidden sm:block cursor-pointer" title="Hồ Chí Minh, VN">
               <span className="material-symbols-outlined text-[24px]">location_on</span>
             </div>
-            {/* Admin Management Shortcut */}
-            <button
-              onClick={() => navigate("/admin/products")}
-              className="h-9 px-4 rounded-full bg-slate-100 text-on-surface hover:bg-slate-200 transition-all text-xs font-bold flex items-center gap-1.5 shadow-sm border border-outline-variant/20 cursor-pointer"
-              title="Truy cập cổng quản lý Admin"
-            >
-              <span className="material-symbols-outlined text-sm">dashboard</span>
-              Quản lý
-            </button>
+            {/* Admin Management Shortcut (Hidden for normal CUSTOMER accounts, visible for guests and admins) */}
+            {(!user || user.role === "ADMIN") && (
+              <button
+                onClick={() => navigate("/admin/products")}
+                className="h-9 px-4 rounded-full bg-slate-100 text-on-surface hover:bg-slate-200 transition-all text-xs font-bold flex items-center gap-1.5 shadow-sm border border-outline-variant/20 cursor-pointer"
+                title="Truy cập cổng quản lý Admin"
+              >
+                <span className="material-symbols-outlined text-sm">dashboard</span>
+                Quản lý
+              </button>
+            )}
 
             {/* User Login/Logout Info */}
             {user ? (
