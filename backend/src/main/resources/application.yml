@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: seven-eleven-retail
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
   
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/seveneleven}
