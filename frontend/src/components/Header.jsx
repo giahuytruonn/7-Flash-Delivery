@@ -1,7 +1,7 @@
 import React from "react";
 import { useAuth } from "../context/AuthContext";
 
-const Header = ({ title = "7-Eleven Retail OS", searchQuery, setSearchQuery, placeholder = "Tìm kiếm..." }) => {
+const Header = ({ title = "7-Flash Delivery", searchQuery, setSearchQuery, placeholder = "Tìm kiếm..." }) => {
   const { user } = useAuth();
 
   const mockUser = {
