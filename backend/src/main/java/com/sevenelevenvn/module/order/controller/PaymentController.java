@@ -60,13 +60,13 @@ public class PaymentController {
 
         CreatePaymentLinkRequest paymentData = CreatePaymentLinkRequest.builder()
                 .orderCode(orderCode)
-                .amount(3000L)
-                .description("Thanh toán đơn hàng #" + orderId.toString().substring(0, 8))
+                .amount(amount)
+                .description("Thanh toan DH " + orderId.toString().substring(0, 8))
                 .returnUrl(returnUrl)
                 .cancelUrl(cancelUrl)
                 .item(PaymentLinkItem.builder()
                         .name("Đơn hàng 7-Eleven")
-                        .price(3000L)
+                        .price(amount)
                         .quantity(1)
                         .build())
                 .build();
