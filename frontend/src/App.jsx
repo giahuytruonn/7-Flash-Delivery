@@ -9,6 +9,7 @@ import Register from "./pages/Register";
 import ProductManagement from "./pages/ProductManagement";
 import OrderManagement from "./pages/OrderManagement";
 import UserShop from "./pages/UserShop";
+import Cart from "./pages/Cart";
 
 // Protected Route Guard Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -85,6 +86,7 @@ function App() {
 
             {/* User Shop Routes */}
             <Route path="/shop" element={<UserShop />} />
+            <Route path="/cart" element={<Cart />} />
 
             {/* Root Redirection */}
             <Route path="/" element={<RootRedirect />} />
